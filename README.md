@@ -4,6 +4,12 @@
 
 PlatformIOでの使用をメインの用途として想定しています。
 
+## PlatformIOでのインポート
+`platformio.ini`に次の文を追加
+```
+lib_deps = https://github.com/omuct-robotclub/omuraisu-library.git
+```
+
 ## 機能
 
 ### chassis/mecanum.hpp
