@@ -41,6 +41,9 @@
     "src/dji/robomas.hpp",
     "src/dji/robomas_core.hpp",
     "src/dji/can_interface.hpp",
-    "src/dji/can_mbed.hpp"
+    "src/dji/can_mbed.hpp",
+    "src/controller/controller_core.hpp",
+    "src/controller/controller_can.hpp",
+    "src/controller/controller_serial.hpp"
   ]
 }
