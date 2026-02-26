@@ -15,10 +15,13 @@ class ServoCore {
 
   ServoCore(uint8_t id) : id_(id) { std::memset(data_, 0, kDataSize); }
 
-  void set_degree(float degree) {
+  void set_degree(float degree, size_t index) {
+    if (index >= kDataSize) {
+      return;  // インデックスが範囲外の場合は無視
+    }
     // 0-180度を0-255の範囲に変換
     uint8_t value = static_cast<uint8_t>(degree / 180.0f * 255);
-    std::memset(data_, value, kDataSize);
+    data_[index] = value;
   }
 
   void set_degrees(const float degrees[kDataSize]) {
