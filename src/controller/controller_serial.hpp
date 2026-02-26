@@ -39,7 +39,7 @@ class SerialController {
               reinterpret_cast<const SerialPacket*>(decoded_data_.data());
 
           // ヘッダーとチェックサムを検証
-          if (packet->header == SerialPacket::HEADER &&
+          if (packet->header == SerialPacket::header &&
               packet->verify_checksum()) {
             data_ = packet->to_controller_data();
             return true;
