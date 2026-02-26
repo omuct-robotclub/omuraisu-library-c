@@ -1,150 +1,356 @@
 # omuraisu-library
 
-ロボット開発において頻繁に使用される基本的な機能を提供するC++ライブラリ群
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
 
-PlatformIOでの使用をメインの用途として想定しています。
+ロボット開発において頻繁に使用される基本的な機能を提供する C++ ライブラリ群です。
 
-## PlatformIOでのインポート
-`platformio.ini`に次の文を追加
-```
+PlatformIO / CMake の両方に対応しており、組み込み（mbed）からデスクトップまで幅広い環境で利用できます。
+
+## 目次
+
+- [インストール](#インストール)
+- [モジュール一覧](#モジュール一覧)
+  - [coordinate — 2D 座標演算](#coordinate--2d-座標演算)
+  - [chassis — メカナムホイール制御](#chassis--メカナムホイール制御)
+  - [pid — PID 制御](#pid--pid-制御)
+  - [dji — DJI ロボマスモーター制御](#dji--dji-ロボマスモーター制御)
+  - [can — CAN バス抽象化](#can--can-バス抽象化)
+  - [controller — コントローラ入力](#controller--コントローラ入力)
+  - [servo — サーボ制御](#servo--サーボ制御)
+- [サンプルコード](#サンプルコード)
+- [ビルド方法](#ビルド方法)
+- [テスト](#テスト)
+- [ライセンス](#ライセンス)
+
+---
+
+## インストール
+
+### PlatformIO
+
+`platformio.ini` に以下を追加してください。
+
+```ini
 lib_deps = https://github.com/omuct-robotclub/omuraisu-library.git
 ```
 
-## 機能
+### CMake（FetchContent）
 
-### chassis/mecanum.hpp
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  omuraisu
+  GIT_REPOSITORY https://github.com/omuct-robotclub/omuraisu-library.git
+  GIT_TAG        main
+)
+FetchContent_MakeAvailable(omuraisu)
 
-メカナムホイールの足回りのホイール速度の算出を提供
+target_link_libraries(your_target PRIVATE omuraisu)
+```
 
-### coordinate/coordinate.hpp
+### CMake（システムインストール）
 
-2D座標の基本的な演算を提供
+```bash
+mkdir build && cd build
+cmake ..
+cmake --build .
+sudo cmake --install .
+```
 
-- `Coordinate`: 直交座標系
-- `CoordinatePolar`: 極座標系
-- `Velocity`: 速度構造体
+```cmake
+find_package(omuraisu REQUIRED)
+target_link_libraries(your_target PRIVATE omuraisu::omuraisu)
+```
 
-### pid/pid.hpp
+> 個別モジュールのみをリンクすることも可能です（`omuraisu::coordinate`, `omuraisu::omuraisu_pid` など）。
 
-基本的なPID制御を提供
+---
 
-- `PidGain`: PIDゲイン構造体
-- `PidParameter`: PIDパラメータ構造体
-- `Pid`: PID制御クラス
+## モジュール一覧
 
-### dji/robomas.hpp
+### coordinate — 2D 座標演算
 
-ロボマスモーター（M3508/C620）の制御を提供
+**ヘッダ:** `coordinate/coordinate.hpp`
+**名前空間:** `bit`
 
-- **注意**: このモジュールはmbed環境が必要です
+2D の直交座標・極座標および速度を扱う構造体と演算を提供します。
 
-### controller/controller.hpp
+| 型 | 説明 |
+|---|---|
+| `Coordinate` | 直交座標（`x`, `y`, `ang`, `axis_ang`） |
+| `CoordinatePolar` | 極座標（`r`, `theta`, `ang`, `axis_ang`） |
+| `Velocity` | `Coordinate` のエイリアス |
+| `VelocityPolar` | `CoordinatePolar` のエイリアス |
 
-- **注意**: https://github.com/NekoChan9382/cobs-serial-manager に依存しています
+```cpp
+using namespace bit;
+
+// 直交座標 ↔ 極座標の相互変換
+Coordinate cart(3.0f, 4.0f);
+CoordinatePolar polar(cart);  // r=5.0, theta=atan2(4,3)
+
+// 算術演算
+Coordinate a(1.0f, 2.0f), b(3.0f, 4.0f);
+a += b;  // a = {4.0, 6.0, 0.0}
+a *= 2.0f;
+
+// 座標系の回転
+convert_ang(cart, M_PI / 2);
+
+// 2点間の距離
+float d = distance(a, b);
+```
+
+### chassis — メカナムホイール制御
+
+**ヘッダ:** `chassis/mecanum.hpp`
+**名前空間:** `bit`
+
+メカナムホイール（4 輪）の逆運動学計算を行い、指定した速度ベクトルから各ホイールの目標速度を算出します。
+
+| クラス | 説明 |
+|---|---|
+| `Mecanum` | 4 輪メカナムの速度計算 |
+
+```cpp
+using namespace bit;
+
+// 各ホイールの位置を極座標で指定
+std::array<CoordinatePolar, 4> wheel_pos = {
+  CoordinatePolar(0.2f,     M_PI / 4),
+  CoordinatePolar(0.2f, 3 * M_PI / 4),
+  CoordinatePolar(0.2f, 5 * M_PI / 4),
+  CoordinatePolar(0.2f, 7 * M_PI / 4),
+};
+Mecanum mecanum(wheel_pos);
+
+// 目標速度 → 各ホイール速度
+Velocity vel = {1.0f, 0.0f, 0.0f};  // 前進
+float result[4];
+mecanum.calc(vel, result);
+```
+
+### pid — PID 制御
+
+**ヘッダ:** `pid/pid.hpp`
+**名前空間:** なし（グローバル）
+
+出力リミット付きの PID コントローラを提供します。
+
+$$
+u(t) = K_p \, e(t) + K_i \int_0^t e(\tau)\,d\tau + K_d \frac{de}{dt}
+$$
+
+| 型 | 説明 |
+|---|---|
+| `PidGain` | ゲイン（`kp`, `ki`, `kd`） |
+| `PidParameter` | ゲイン + 出力上下限（`gain`, `min`, `max`） |
+| `Pid` | PID 制御クラス |
+
+```cpp
+PidParameter param = {
+  .gain = {.kp = 1.0f, .ki = 0.1f, .kd = 0.01f},
+  .min = -100.0f,
+  .max = 100.0f,
+};
+Pid pid(param);
+
+float output = pid.calc(/*goal=*/100.0f, /*actual=*/0.0f, /*dt=*/0.01f);
+
+pid.reset();  // 積分値・前回偏差をクリア
+```
+
+### dji — DJI ロボマスモーター制御
+
+**ヘッダ:** `dji/robomas.hpp`, `dji/robomas_core.hpp`
+**名前空間:** `dji`
+
+DJI M3508 / C620 モーターの CAN 通信プロトコルを実装します。最大 8 軸を同時制御できます。
+
+| クラス | 説明 |
+|---|---|
+| `RobomasData` | モーターフィードバック（角度・回転数・電流・温度） |
+| `RobomasCore` | プラットフォーム非依存のコアロジック |
+| `Robomas` | `RobomasCore` + `ICanBus` を組み合わせた高レベル API |
+
+```cpp
+// mbed 環境の例
+can::MbedCanBus can_bus(PA_11, PA_12);
+dji::Robomas robomas(can_bus);
+
+// モーター出力を設定（ID: 1〜8）
+robomas.set_output(5000, 1);
+
+// パーセント指定も可能（-1.0 〜 1.0）
+robomas.set_output_percent(0.5f, 2);
+
+// CAN 送信
+robomas.write();
+
+// フィードバック受信
+int motor_idx = robomas.read_data();
+if (motor_idx >= 0) {
+  uint16_t angle = robomas.get_angle(motor_idx + 1);
+  int16_t rpm    = robomas.get_rpm(motor_idx + 1);
+}
+```
+
+### can — CAN バス抽象化
+
+**ヘッダ:** `can/can_interface.hpp`, `can/can_mbed.hpp`
+**名前空間:** `can`
+
+プラットフォーム非依存の CAN バスインターフェースを定義します。
+
+| 型 | 説明 |
+|---|---|
+| `CanMessage` | CAN メッセージ（ID, データ, 長さ） |
+| `ICanBus` | 抽象 CAN バスインターフェース（`write` / `read`） |
+| `MbedCanBus` | mbed 環境向け実装 |
+
+```cpp
+// mbed の例
+can::MbedCanBus bus(PA_11, PA_12, 1000000);
+
+can::CanMessage msg;
+msg.id = 0x200;
+msg.data[0] = 0xFF;
+msg.len = 1;
+bus.write(msg);
+```
+
+### controller — コントローラ入力
+
+**ヘッダ:** `controller/controller_core.hpp`, `controller/controller_can.hpp`, `controller/controller_serial.hpp`
+**名前空間:** `controller`
+
+PS5 コントローラからの入力を受信・パースします。CAN 通信・シリアル（COBS）通信・ROS2 Joy メッセージの 3 つの入力方式に対応しています。
+
+> **依存:** シリアル通信を使用する場合 [cobs-serial-manager](https://github.com/NekoChan9382/cobs-serial-manager) が必要です。
+
+| 型 | 説明 |
+|---|---|
+| `ControllerData` | コントローラの状態（スティック・トリガー・ボタン） |
+| `Button` / `DPad` | ボタン / 十字キーの列挙型 |
+| `CanParser` | CAN フレームからのパーサ |
+| `RosJoyParser` | ROS2 `sensor_msgs/msg/Joy` からのパーサ |
+| `CanController` | CAN 経由でのコントローラ受信クラス |
+| `SerialController` | シリアル（COBS）経由でのコントローラ受信クラス |
+
+```cpp
+// CAN 経由
+can::MbedCanBus can_bus(PA_11, PA_12);
+controller::CanController ctrl(can_bus);
+
+if (ctrl.read()) {
+  const auto& data = ctrl.data();
+  float lx = data.left_x;   // -1.0 〜 1.0
+  bool  a  = data.circle();  // ○ボタン
+  bool  up = data.is_pressed(controller::DPad::Up);
+}
+
+// ROS2 経由（テンプレート対応）
+controller::RosJoyParser parser;
+parser.parse(joy_msg);  // sensor_msgs::msg::Joy
+```
+
+### servo — サーボ制御
+
+**ヘッダ:** `servo/servo_core.hpp`
+**名前空間:** `servo`
+
+CAN 経由でサーボモーターを制御するための機能を提供します。角度（0〜180°）を内部で 0〜255 の値に変換し、CAN メッセージとして送信できます。
+
+| クラス | 説明 |
+|---|---|
+| `ServoCore` | サーボ制御のコアロジック（プラットフォーム非依存） |
+
+**主なメソッド:**
+
+| メソッド | 説明 |
+|---|---|
+| `ServoCore(uint8_t id)` | CAN ID を指定して初期化 |
+| `set_degree(float degree)` | 角度（0〜180°）を設定 |
+| `set_degree(float degrees[8])` | 8 チャンネル分の角度を一括設定 |
+| `to_can_message()` | 現在の状態を `CANMessage` に変換 |
+
+```cpp
+servo::ServoCore servo(0x10);  // CAN ID を指定
+
+// 単一角度を設定
+servo.set_degree(90.0f);
+
+// CAN メッセージとして取得・送信
+auto msg = servo.to_can_message();
+```
+
+---
+
+## サンプルコード
+
+`examples/` ディレクトリにサンプルプログラムがあります。
+
+| ファイル | 内容 |
+|---|---|
+| `coordinate_example.cpp` | 座標の生成・変換・演算 |
+| `mecanum_example.cpp` | メカナムホイールの速度計算 |
+| `pid_example.cpp` | PID 制御シミュレーション（100 ステップ） |
+
+サンプルをビルドするには：
+
+```bash
+cmake -DBUILD_EXAMPLES=ON ..
+cmake --build .
+```
+
+---
 
 ## ビルド方法
 
 ### 要件
 
-- CMake 3.14以上
-- C++17対応コンパイラ
+- CMake 3.14 以上
+- C++17 対応コンパイラ
 
 ### ビルド手順
 
 ```bash
-# ビルドディレクトリを作成
 mkdir build && cd build
-
-# CMakeを実行
 cmake ..
-
-# ビルド
 cmake --build .
 ```
 
 ### ビルドオプション
 
-| オプション       | 説明                       | デフォルト |
-| ---------------- | -------------------------- | ---------- |
-| `BUILD_EXAMPLES` | サンプルプログラムをビルド | OFF        |
-| `BUILD_TESTS`    | テストをビルド             | OFF        |
+| オプション | 説明 | デフォルト |
+|---|---|---|
+| `BUILD_EXAMPLES` | サンプルプログラムをビルド | `OFF` |
+| `BUILD_TESTS` | テストをビルド | `OFF` |
+
+---
+
+## テスト
+
+Google Test を使用しています。
 
 ```bash
-# サンプルを含めてビルド
-cmake -DBUILD_EXAMPLES=ON ..
+mkdir build && cd build
+cmake -DBUILD_TESTS=ON ..
 cmake --build .
+ctest --output-on-failure
 ```
 
-## 使用方法
+| テストファイル | 内容 |
+|---|---|
+| `tests/coordinate_test.cpp` | 座標の構築・演算・変換 |
+| `tests/pid_test.cpp` | 比例制御・出力制限・リセット |
 
-### CMakeプロジェクトでの使用
-
-```cmake
-find_package(omuraisu REQUIRED)
-target_link_libraries(your_target omuraisu::omuraisu)
-```
-
-### ヘッダファイルの直接インクルード
-
-```cpp
-#include "coordinate/coordinate.hpp"
-#include "chassis/mecanum.hpp"
-#include "pid/pid.hpp"
-```
-
-## サンプルコード
-
-### PID制御
-
-```cpp
-#include "pid/pid.hpp"
-
-int main() {
-    PidParameter param = {
-        .gain = {.kp = 1.0f, .ki = 0.1f, .kd = 0.01f},
-        .min = -100.0f,
-        .max = 100.0f
-    };
-
-    Pid pid(param);
-
-    float goal = 100.0f;
-    float actual = 0.0f;
-    float dt = 0.01f;
-
-    float output = pid.calc(goal, actual, dt);
-    return 0;
-}
-```
-
-### メカナムホイール
-
-```cpp
-#include "chassis/mecanum.hpp"
-#include "coordinate/coordinate.hpp"
-
-int main() {
-    using namespace bit;
-
-    // ホイール位置を設定
-    std::array<CoordinatePolar, 4> wheel_pos = {
-        CoordinatePolar(0.2f, M_PI/4, 0, 0),
-        CoordinatePolar(0.2f, 3*M_PI/4, 0, 0),
-        CoordinatePolar(0.2f, 5*M_PI/4, 0, 0),
-        CoordinatePolar(0.2f, 7*M_PI/4, 0, 0)
-    };
-
-    Mecanum mecanum(wheel_pos);
-
-    // 速度を設定して各ホイール速度を計算
-    Velocity vel = {1.0f, 0.0f, 0.0f};
-    float result[4];
-    mecanum.calc(vel, result);
-
-    return 0;
-}
-```
+---
 
 ## ライセンス
 
-MIT License
+[MIT License](LICENSE)
+
+## 作者
+[bit](https://github.com/NekoChan9382)
