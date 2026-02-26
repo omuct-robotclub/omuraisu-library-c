@@ -3,7 +3,7 @@
 
 #include <cmath>
 
-namespace bit {
+namespace coordinate {
 
 struct Coordinate;
 struct CoordinatePolar;
@@ -67,5 +67,5 @@ void convert_ang(Coordinate& p, const float& ang) noexcept;
 
 float distance(const Coordinate& p, const Coordinate& q) noexcept;
 
-}  // namespace bit
+}  // namespace coordinate
 #endif  // COORDINATE_HPP

@@ -8,23 +8,23 @@
 
 // constexpr int motor_amount = 4;
 
-namespace bit {
+namespace chassis {
 
 class Mecanum {
  public:
   Mecanum();
-  Mecanum(const std::array<CoordinatePolar, 4>& pos) {
+  Mecanum(const std::array<coordinate::CoordinatePolar, 4>& pos) {
     for (int i = 0; i < 4; ++i) {
       wheel_pos[i] = pos[i];
     }
   }
-  Mecanum(const std::array<Coordinate, 4>& pos) {
+  Mecanum(const std::array<coordinate::Coordinate, 4>& pos) {
     for (int i = 0; i < 4; ++i) {
-      wheel_pos[i] = static_cast<CoordinatePolar>(pos[i]);
+      wheel_pos[i] = static_cast<coordinate::CoordinatePolar>(pos[i]);
     }
   }
 
-  void calc(const Velocity& vel, float* result) {
+  void calc(const coordinate::Velocity& vel, float* result) {
     for (int i = 0; i < 4; ++i) {
       constexpr float ofs = 2 * M_PI / 4;
       const float vx =
@@ -36,8 +36,8 @@ class Mecanum {
   }
 
  private:
-  std::array<CoordinatePolar, 4> wheel_pos;
+  std::array<coordinate::CoordinatePolar, 4> wheel_pos;
 };
 
-}  // namespace bit
+}  // namespace chassis
 #endif

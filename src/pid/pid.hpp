@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+namespace pid {
+
 struct PidGain {
   float kp;
   float ki;
@@ -51,5 +53,6 @@ class Pid {
   float _pre_error;
   float _integral;
 };
+}  // namespace pid
 
 #endif  // PID_NEW_HPP

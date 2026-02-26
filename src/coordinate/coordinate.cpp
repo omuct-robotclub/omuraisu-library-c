@@ -1,6 +1,6 @@
 #include "coordinate.hpp"
 
-namespace bit {
+namespace coordinate {
 
 float Coordinate::get_axis_ang() const noexcept { return axis_ang; }
 
@@ -112,4 +112,4 @@ float distance(const Coordinate& p, const Coordinate& q) noexcept {
   }
 }
 
-}  // namespace bit
+}  // namespace coordinate
