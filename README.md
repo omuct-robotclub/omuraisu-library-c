@@ -72,7 +72,7 @@ target_link_libraries(your_target PRIVATE omuraisu::omuraisu)
 ### coordinate — 2D 座標演算
 
 **ヘッダ:** `coordinate/coordinate.hpp`
-**名前空間:** `bit`
+**名前空間:** `coordinate`
 
 2D の直交座標・極座標および速度を扱う構造体と演算を提供します。
 
@@ -84,7 +84,7 @@ target_link_libraries(your_target PRIVATE omuraisu::omuraisu)
 | `VelocityPolar` | `CoordinatePolar` のエイリアス |
 
 ```cpp
-using namespace bit;
+using namespace coordinate;
 
 // 直交座標 ↔ 極座標の相互変換
 Coordinate cart(3.0f, 4.0f);
@@ -105,7 +105,7 @@ float d = distance(a, b);
 ### chassis — メカナムホイール制御
 
 **ヘッダ:** `chassis/mecanum.hpp`
-**名前空間:** `bit`
+**名前空間:** `chassis`
 
 メカナムホイール（4 輪）の逆運動学計算を行い、指定した速度ベクトルから各ホイールの目標速度を算出します。
 
@@ -114,7 +114,7 @@ float d = distance(a, b);
 | `Mecanum` | 4 輪メカナムの速度計算 |
 
 ```cpp
-using namespace bit;
+using namespace chassis;
 
 // 各ホイールの位置を極座標で指定
 std::array<CoordinatePolar, 4> wheel_pos = {
@@ -134,7 +134,7 @@ mecanum.calc(vel, result);
 ### pid — PID 制御
 
 **ヘッダ:** `pid/pid.hpp`
-**名前空間:** なし（グローバル）
+**名前空間:** `pid`
 
 出力リミット付きの PID コントローラを提供します。
 
@@ -149,12 +149,12 @@ $$
 | `Pid` | PID 制御クラス |
 
 ```cpp
-PidParameter param = {
+pid::PidParameter param = {
   .gain = {.kp = 1.0f, .ki = 0.1f, .kd = 0.01f},
   .min = -100.0f,
   .max = 100.0f,
 };
-Pid pid(param);
+pid::Pid pid(param);
 
 float output = pid.calc(/*goal=*/100.0f, /*actual=*/0.0f, /*dt=*/0.01f);
 
