@@ -33,14 +33,14 @@ class SerialController {
         // 次のフレーム用にリセット
         buffer_index_ = 0;
 
-        if (decoded_data_.size() == sizeof(SerialPacket)) {
+        if (decoded_data_.size() == sizeof(SerialPacket) &&
+            decoded_data_[0] == SerialPacket::HEADER) {
           // パケットとして解釈
           const SerialPacket* packet =
               reinterpret_cast<const SerialPacket*>(decoded_data_.data());
 
           // ヘッダーとチェックサムを検証
-          if (packet->header == SerialPacket::header &&
-              packet->verify_checksum()) {
+          if (packet->verify_checksum()) {
             data_ = packet->to_controller_data();
             return true;
           }

@@ -86,8 +86,9 @@ struct ControllerData {
 
 /// @brief シリアル通信用のパケット構造体（COBS用）
 struct SerialPacket {
-  static constexpr uint8_t header = 0xAA;
+  static constexpr uint8_t HEADER = 0xAA;
 
+  uint8_t header = HEADER;
   int8_t left_x;
   int8_t left_y;
   int8_t right_x;
