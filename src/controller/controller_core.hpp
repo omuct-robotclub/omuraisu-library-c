@@ -96,6 +96,7 @@ struct SerialPacket {
   uint8_t l2_trigger;
   uint8_t r2_trigger;
   uint16_t buttons;
+  uint8_t dpad;
   uint8_t checksum;
 
   SerialPacket()
@@ -105,7 +106,8 @@ struct SerialPacket {
         right_y(0),
         l2_trigger(0),
         r2_trigger(0),
-        buttons(0) {
+        buttons(0),
+        dpad(0) {
     checksum = calc_checksum();
   }
   SerialPacket(const ControllerData& data)
@@ -115,7 +117,8 @@ struct SerialPacket {
         right_y(static_cast<int8_t>(data.right_y * 127)),
         l2_trigger(static_cast<uint8_t>(data.l2_trigger * 255)),
         r2_trigger(static_cast<uint8_t>(data.r2_trigger * 255)),
-        buttons(data.buttons) {
+        buttons(data.buttons),
+        dpad(data.dpad) {
     checksum = calc_checksum();
   }
 
@@ -130,6 +133,7 @@ struct SerialPacket {
     cs ^= r2_trigger;
     cs ^= static_cast<uint8_t>(buttons & 0xFF);
     cs ^= static_cast<uint8_t>((buttons >> 8) & 0xFF);
+    cs ^= dpad;
     return cs;
   }
 
@@ -146,6 +150,7 @@ struct SerialPacket {
     data.l2_trigger = l2_trigger / 255.0f;
     data.r2_trigger = r2_trigger / 255.0f;
     data.buttons = buttons;
+    data.dpad = dpad;
     return data;
   }
 } __attribute__((packed));
