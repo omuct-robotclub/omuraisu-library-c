@@ -35,8 +35,10 @@ class RobomasCore {
   static constexpr uint32_t RX_ID_MAX = 0x208;
   static constexpr uint32_t TX_ID_GROUP1 = 0x200;  // モーター1-4用
   static constexpr uint32_t TX_ID_GROUP2 = 0x1FF;  // モーター5-8用
+
   static constexpr uint32_t M3508_GEAR_RATIO = 19;
   static constexpr uint32_t M2006_GEAR_RATIO = 35;
+  static constexpr uint16_t ANGLE_MAX_VALUE = 8192;
 
   RobomasCore() : max_output_(16384) {
     std::memset(output_, 0, sizeof(output_));
