@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.14)
 project(omuraisu-library
     VERSION 1.0.0
-    DESCRIPTION "omuraisu Library - Robot development C++ library"
-    LANGUAGES CXX
+    DESCRIPTION "omuraisu Library - Robot development C library"
+    LANGUAGES C
 )
 
-# C++17を使用
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# C17を使用
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
 
 # コンパイルオプション
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -18,7 +18,7 @@ set(OMURAISU_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # coordinateライブラリ（実装ファイルあり）
 add_library(coordinate
-    src/coordinate/coordinate.cpp
+    src/coordinate/coordinate.c
 )
 target_include_directories(coordinate PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
@@ -104,7 +104,7 @@ install(TARGETS coordinate omuraisu_pid omuraisu_chassis omuraisu_can omuraisu_d
 
 install(DIRECTORY src/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/omuraisu
-    FILES_MATCHING PATTERN "*.hpp"
+    FILES_MATCHING PATTERN "*.h"
 )
 
 install(EXPORT omuraisu-targets
