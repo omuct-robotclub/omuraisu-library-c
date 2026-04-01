@@ -17,17 +17,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(OMURAISU_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # coordinateライブラリ（実装ファイルあり）
-add_library(coordinate
+add_library(omuraisu_coordinate
     src/coordinate/coordinate.c
 )
-target_include_directories(coordinate PUBLIC
+target_include_directories(omuraisu_coordinate PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
 
-# ヘッダーオンリーライブラリ用のインターフェースライブラリ
-add_library(omuraisu_pid INTERFACE)
-target_include_directories(omuraisu_pid INTERFACE
+add_library(omuraisu_pid
+    src/pid/pid.c
+)
+target_include_directories(omuraisu_pid PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
@@ -37,7 +38,7 @@ target_include_directories(omuraisu_chassis INTERFACE
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(omuraisu_chassis INTERFACE coordinate)
+target_link_libraries(omuraisu_chassis INTERFACE omuraisu_coordinate)
 
 add_library(omuraisu_can INTERFACE)
 target_include_directories(omuraisu_can INTERFACE
@@ -69,7 +70,7 @@ target_link_libraries(omuraisu_servo INTERFACE omuraisu_can)
 # メインライブラリ（全てをまとめる）
 add_library(omuraisu INTERFACE)
 target_link_libraries(omuraisu INTERFACE
-    coordinate
+    omuraisu_coordinate
     omuraisu_pid
     omuraisu_chassis
     omuraisu_can
@@ -94,7 +95,7 @@ endif()
 # インストール設定
 include(GNUInstallDirs)
 
-install(TARGETS coordinate omuraisu_pid omuraisu_chassis omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu
+install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu
     EXPORT omuraisu-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
