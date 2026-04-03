@@ -1,10 +1,10 @@
-#ifndef CAN_MBED_HPP
-#define CAN_MBED_HPP
+#ifndef CAN_MBED_H
+#define CAN_MBED_H
 
 // このファイルはmbed環境でのみ使用可能
 #ifdef MBED_H
 
-#include "can_interface.hpp"
+#include "can_interface.h"
 #include "mbed.h"
 
 namespace can {
@@ -61,4 +61,4 @@ class MbedCanBus : public ICanBus {
 }  // namespace can
 
 #endif  // MBED_H
-#endif  // CAN_MBED_HPP
+#endif  // CAN_MBED_H

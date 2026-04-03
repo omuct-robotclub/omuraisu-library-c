@@ -40,11 +40,21 @@ target_include_directories(omuraisu_chassis INTERFACE
 )
 target_link_libraries(omuraisu_chassis INTERFACE omuraisu_coordinate)
 
-add_library(omuraisu_can INTERFACE)
-target_include_directories(omuraisu_can INTERFACE
+add_library(omuraisu_can
+    src/can/can_interface.c
+    src/can/can_cube.c
+)
+target_include_directories(omuraisu_can PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
+
+option(OMURAISU_BUILD_STM32_CAN "Build STM32 Cube CAN adapter" OFF)
+if(OMURAISU_BUILD_STM32_CAN)
+    target_sources(omuraisu_can PRIVATE
+        src/can/can_stm32.c
+    )
+endif()
 
 add_library(omuraisu_dji INTERFACE)
 target_include_directories(omuraisu_dji INTERFACE
