@@ -56,12 +56,14 @@ if(OMURAISU_BUILD_STM32_CAN)
     )
 endif()
 
-add_library(omuraisu_dji INTERFACE)
-target_include_directories(omuraisu_dji INTERFACE
+add_library(omuraisu_dji
+    src/dji/robomas_core.c
+    src/dji/robomas.c
+)
+target_include_directories(omuraisu_dji PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(omuraisu_dji INTERFACE omuraisu_can)
 
 add_library(omuraisu_controller INTERFACE)
 target_include_directories(omuraisu_controller INTERFACE
