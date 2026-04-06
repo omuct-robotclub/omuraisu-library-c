@@ -94,7 +94,7 @@ int16_t om_rm_core_get_current(const RobomasCore* core, int id) {
   return core->data_[index].current;
 }
 
-uint16_t om_rm_get_angle(const RobomasCore* core, int id) {
+uint16_t om_rm_core_get_angle(const RobomasCore* core, int id) {
   if (id < 1 || id > 8) {
     return 0;
   }
@@ -102,7 +102,7 @@ uint16_t om_rm_get_angle(const RobomasCore* core, int id) {
   return core->data_[index].angle;
 }
 
-int16_t om_rm_get_rpm(const RobomasCore* core, int id) {
+int16_t om_rm_core_get_rpm(const RobomasCore* core, int id) {
   if (id < 1 || id > 8) {
     return 0;
   }
@@ -110,7 +110,7 @@ int16_t om_rm_get_rpm(const RobomasCore* core, int id) {
   return core->data_[index].rpm;
 }
 
-uint8_t om_rm_get_temp(const RobomasCore* core, int id) {
+uint8_t om_rm_core_get_temp(const RobomasCore* core, int id) {
   if (id < 1 || id > 8) {
     return 0;
   }
