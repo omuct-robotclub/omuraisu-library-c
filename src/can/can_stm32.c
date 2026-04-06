@@ -196,6 +196,24 @@ static void can_stm32_start_read(void* self) {
     CAN_HandleTypeDef* hcan = (CAN_HandleTypeDef*)context->handle;
     uint32_t it_mask = context->rx_fifo == 0U ? CAN_IT_RX_FIFO0_MSG_PENDING
                                               : CAN_IT_RX_FIFO1_MSG_PENDING;
+    CAN_FilterTypeDef can_filter = {0};
+    can_filter.FilterMode = CAN_FILTERMODE_IDMASK;
+    can_filter.FilterScale = CAN_FILTERSCALE_32BIT;
+    can_filter.FilterIdHigh = 0x0000;
+    can_filter.FilterIdLow = 0x0000;
+    can_filter.FilterMaskIdHigh = 0x0000;
+    can_filter.FilterMaskIdLow = 0x0000;
+    can_filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;
+    can_filter.FilterActivation = ENABLE;
+    can_filter.SlaveStartFilterBank = 14;
+
+    if (hcan1.Instance == CAN1) {
+      can_filter.FilterBank = 0;
+    } else {
+      can_filter.FilterBank = 14;
+    }
+
+    HAL_CAN_ConfigFilter (&hcan1, &can_filter);
     HAL_CAN_Start(hcan);
     HAL_CAN_ActivateNotification(hcan, it_mask);
     return;
@@ -205,6 +223,14 @@ static void can_stm32_start_read(void* self) {
     FDCAN_HandleTypeDef* hfdcan = (FDCAN_HandleTypeDef*)context->handle;
     uint32_t it_mask = context->rx_fifo == 0U ? FDCAN_IT_RX_FIFO0_NEW_MESSAGE
                                               : FDCAN_IT_RX_FIFO1_NEW_MESSAGE;
+    FDCAN_FilterTypeDef sFilter;
+    sFilter.IdType       = FDCAN_STANDARD_ID;
+    sFilter.FilterIndex  = 0;
+    sFilter.FilterType   = FDCAN_FILTER_MASK;
+    sFilter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+    sFilter.FilterID1    = 0x000;
+    sFilter.FilterID2    = 0x000;
+    HAL_FDCAN_ConfigFilter(hfdcan, &sFilter);
     HAL_FDCAN_Start(hfdcan);
     HAL_FDCAN_ActivateNotification(hfdcan, it_mask, 0U);
   }
