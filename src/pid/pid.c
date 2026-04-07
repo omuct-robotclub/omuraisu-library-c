@@ -1,5 +1,4 @@
 #include "pid.h"
-#include <math.h>
 
 PidController om_pid_init(const PidParameter parameter) {
   PidController controller;
@@ -16,7 +15,7 @@ float om_pid_calc(PidController* self, const float goal, const float actual, con
   float output = self->parameter.gain.kp * error + self->parameter.gain.ki * self->integral +
                  self->parameter.gain.kd * deriv;
 
-  output = fmaxf(self->parameter.min, fminf(self->parameter.max, output));
+  output = output > self->parameter.max ? self->parameter.max : output < self->parameter.min ? self->parameter.min : output;
   self->pre_error = error;
   return output;
 }
