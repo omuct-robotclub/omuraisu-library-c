@@ -217,13 +217,13 @@ static void can_stm32_start_read(void* self) {
     can_filter.FilterActivation = ENABLE;
     can_filter.SlaveStartFilterBank = 14;
 
-    if (hcan1.Instance == CAN1) {
+    if (hcan->Instance == CAN1) {
       can_filter.FilterBank = 0;
     } else {
       can_filter.FilterBank = 14;
     }
 
-    HAL_CAN_ConfigFilter (&hcan1, &can_filter);
+    HAL_CAN_ConfigFilter (hcan, &can_filter);
     HAL_CAN_Start(hcan);
     HAL_CAN_ActivateNotification(hcan, it_mask);
     return;
