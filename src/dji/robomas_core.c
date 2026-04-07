@@ -22,9 +22,9 @@ RobomasData om_rm_data_init() {
 }
 
 void om_rm_data_parse(RobomasData* data, const uint8_t raw[8]) {
-  data->angle = (uint16_t)raw[0] | ((uint16_t)raw[1] << 8);
-  data->rpm = (int16_t)raw[2] | ((int16_t)raw[3] << 8);
-  data->current = (int16_t)raw[4] | ((int16_t)raw[5] << 8);
+  data->angle = ((uint16_t)raw[0] << 8) | (uint16_t)raw[1];
+  data->rpm = ((int16_t)raw[2] << 8) | (int16_t)raw[3];
+  data->current = ((int16_t)raw[4] << 8) | (int16_t)raw[5];
   data->temp = raw[6];
 }
 
@@ -62,8 +62,9 @@ void om_rm_core_set_output(RobomasCore* core, int16_t current, int id) {
   } else if (clamped_current < -core->max_output_) {
     clamped_current = -core->max_output_;
   }
-  core->output_[0][index] = clamped_current & 0xFF;
-  core->output_[1][index] = (clamped_current >> 8) & 0xFF;
+  const unsigned int group = index / 4;
+  core->output_[group][(index % 4) * 2] = (clamped_current >> 8) & 0xFF;
+  core->output_[group][(index % 4) * 2 + 1] = clamped_current & 0xFF;
 }
 
 void om_rm_core_set_output_percent(RobomasCore* core, float percent, int id) {
@@ -78,7 +79,7 @@ void om_rm_core_get_output(const RobomasCore* core, uint8_t out[2][8]) {
   memcpy(out, core->output_, sizeof(core->output_));
 }
 
-void om_rm_core_get_output_group(const RobomasCore* core, uint8_t out[8], unsigned int group) {
+void om_rm_core_get_output_group(const RobomasCore* core, uint8_t out[8], const unsigned int group) {
   if (group > 1) {
     memset(out, 0, 8);
     return;
