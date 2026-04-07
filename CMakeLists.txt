@@ -49,11 +49,18 @@ target_include_directories(omuraisu_can PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-option(OMURAISU_BUILD_STM32_CAN "Build STM32 Cube CAN adapter" OFF)
-if(OMURAISU_BUILD_STM32_CAN)
+option(OMURAISU_CAN_STM32_ENABLE "Enable STM32 Cube CAN adapter" OFF)
+option(OMURAISU_BUILD_STM32_CAN "[Deprecated] Use OMURAISU_CAN_STM32_ENABLE" OFF)
+
+if(OMURAISU_BUILD_STM32_CAN AND NOT OMURAISU_CAN_STM32_ENABLE)
+    set(OMURAISU_CAN_STM32_ENABLE ON CACHE BOOL "Enable STM32 Cube CAN adapter" FORCE)
+endif()
+
+if(OMURAISU_CAN_STM32_ENABLE)
     target_sources(omuraisu_can PRIVATE
         src/can/can_stm32.c
     )
+    target_compile_definitions(omuraisu_can PRIVATE OMURAISU_CAN_STM32_ENABLE)
 endif()
 
 add_library(omuraisu_dji
