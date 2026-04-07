@@ -28,6 +28,7 @@ static CanStm32Context* can_stm32_find_context(void* handle) {
   return 0;
 }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
 static uint32_t can_stm32_fdcan_dlc_from_len(uint8_t len) {
   switch (len) {
     case 0:
@@ -73,6 +74,7 @@ static uint8_t can_stm32_len_from_fdcan_dlc(uint32_t dlc) {
       return 8;
   }
 }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 
 static bool can_stm32_can_write(void* self, const CanMessage* msg) {
   CanStm32Context* context = (CanStm32Context*)self;
@@ -99,6 +101,7 @@ static bool can_stm32_can_write(void* self, const CanMessage* msg) {
          HAL_OK;
 }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
 static bool can_stm32_fdcan_write(void* self, const CanMessage* msg) {
   CanStm32Context* context = (CanStm32Context*)self;
   FDCAN_HandleTypeDef* hfdcan = (FDCAN_HandleTypeDef*)context->handle;
@@ -122,6 +125,7 @@ static bool can_stm32_fdcan_write(void* self, const CanMessage* msg) {
   return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &header,
                                        (uint8_t*)msg->data) == HAL_OK;
 }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 
 static bool can_stm32_write(void* self, const CanMessage* msg) {
   CanStm32Context* context = (CanStm32Context*)self;
@@ -130,9 +134,11 @@ static bool can_stm32_write(void* self, const CanMessage* msg) {
     return can_stm32_can_write(self, msg);
   }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
   if (context->kind == CAN_STM32_KIND_FDCAN) {
     return can_stm32_fdcan_write(self, msg);
   }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 
   return false;
 }
@@ -156,6 +162,7 @@ static bool can_stm32_read_common_can(CanStm32Context* context,
   return true;
 }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
 static bool can_stm32_read_common_fdcan(CanStm32Context* context,
                                         CanMessage* msg) {
   FDCAN_HandleTypeDef* hfdcan = (FDCAN_HandleTypeDef*)context->handle;
@@ -174,6 +181,7 @@ static bool can_stm32_read_common_fdcan(CanStm32Context* context,
   msg->len = can_stm32_len_from_fdcan_dlc(header.DataLength);
   return true;
 }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 
 static bool can_stm32_read_hw(void* self, CanMessage* msg) {
   CanStm32Context* context = (CanStm32Context*)self;
@@ -182,9 +190,11 @@ static bool can_stm32_read_hw(void* self, CanMessage* msg) {
     return can_stm32_read_common_can(context, msg);
   }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
   if (context->kind == CAN_STM32_KIND_FDCAN) {
     return can_stm32_read_common_fdcan(context, msg);
   }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 
   return false;
 }
@@ -219,6 +229,7 @@ static void can_stm32_start_read(void* self) {
     return;
   }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
   if (context->kind == CAN_STM32_KIND_FDCAN) {
     FDCAN_HandleTypeDef* hfdcan = (FDCAN_HandleTypeDef*)context->handle;
     uint32_t it_mask = context->rx_fifo == 0U ? FDCAN_IT_RX_FIFO0_NEW_MESSAGE
@@ -234,6 +245,7 @@ static void can_stm32_start_read(void* self) {
     HAL_FDCAN_Start(hfdcan);
     HAL_FDCAN_ActivateNotification(hfdcan, it_mask, 0U);
   }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 }
 
 static void can_stm32_stop_read(void* self) {
@@ -248,6 +260,7 @@ static void can_stm32_stop_read(void* self) {
     return;
   }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
   if (context->kind == CAN_STM32_KIND_FDCAN) {
     FDCAN_HandleTypeDef* hfdcan = (FDCAN_HandleTypeDef*)context->handle;
     uint32_t it_mask = context->rx_fifo == 0U ? FDCAN_IT_RX_FIFO0_NEW_MESSAGE
@@ -255,6 +268,7 @@ static void can_stm32_stop_read(void* self) {
     HAL_FDCAN_DeactivateNotification(hfdcan, it_mask);
     HAL_FDCAN_Stop(hfdcan);
   }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 }
 
 void can_stm32_context_init(CanStm32Context* context, CanCube* cube,
@@ -311,6 +325,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* hcan) {
   can_stm32_dispatch_rx(hcan);
 }
 
+#ifdef OMURAISU_CAN_STM32_FDCAN_ENABLE
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef* hfdcan,
                                uint32_t RxFifo0ITs) {
   (void)RxFifo0ITs;
@@ -322,6 +337,7 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* hfdcan,
   (void)RxFifo1ITs;
   can_stm32_dispatch_rx(hfdcan);
 }
+#endif  // OMURAISU_CAN_STM32_FDCAN_ENABLE
 
 #else
 

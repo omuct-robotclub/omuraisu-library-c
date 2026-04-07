@@ -50,6 +50,7 @@ target_include_directories(omuraisu_can PUBLIC
 )
 
 option(OMURAISU_CAN_STM32_ENABLE "Enable STM32 Cube CAN adapter" OFF)
+option(OMURAISU_CAN_STM32_FDCAN_ENABLE "Enable STM32 FDCAN support in STM32 CAN adapter" ON)
 option(OMURAISU_BUILD_STM32_CAN "[Deprecated] Use OMURAISU_CAN_STM32_ENABLE" OFF)
 
 if(OMURAISU_BUILD_STM32_CAN AND NOT OMURAISU_CAN_STM32_ENABLE)
@@ -61,6 +62,9 @@ if(OMURAISU_CAN_STM32_ENABLE)
         src/can/can_stm32.c
     )
     target_compile_definitions(omuraisu_can PRIVATE OMURAISU_CAN_STM32_ENABLE)
+    if(OMURAISU_CAN_STM32_FDCAN_ENABLE)
+        target_compile_definitions(omuraisu_can PRIVATE OMURAISU_CAN_STM32_FDCAN_ENABLE)
+    endif()
 endif()
 
 add_library(omuraisu_dji
