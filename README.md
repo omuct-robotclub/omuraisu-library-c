@@ -1,7 +1,7 @@
 # omuraisu-library
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![C17](https://img.shields.io/badge/C-17-blue.svg)](https://en.cppreference.com/w/c/language)
+[![C11](https://img.shields.io/badge/C-11-blue.svg)](https://en.cppreference.com/w/c/language)
 
 ロボット開発において頻繁に使用される基本的な機能を提供する C ライブラリ群です。
 
