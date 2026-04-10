@@ -33,12 +33,14 @@ target_include_directories(omuraisu_pid PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-add_library(omuraisu_chassis INTERFACE)
-target_include_directories(omuraisu_chassis INTERFACE
+add_library(omuraisu_chassis
+    src/chassis/mecanum.c
+)
+target_include_directories(omuraisu_chassis PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(omuraisu_chassis INTERFACE omuraisu_coordinate)
+target_link_libraries(omuraisu_chassis PUBLIC omuraisu_coordinate)
 
 add_library(omuraisu_can
     src/can/can_interface.c
