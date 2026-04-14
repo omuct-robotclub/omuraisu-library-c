@@ -86,14 +86,15 @@ target_include_directories(omuraisu_controller PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(omuraisu_controller PUBLIC omuraisu_can)
 
-add_library(omuraisu_servo INTERFACE)
-target_include_directories(omuraisu_servo INTERFACE
+add_library(omuraisu_servo
+    src/servo/servo_core.c
+)
+target_include_directories(omuraisu_servo PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(omuraisu_servo INTERFACE omuraisu_can)
+target_link_libraries(omuraisu_servo PUBLIC omuraisu_can)
 
 # メインライブラリ（全てをまとめる）
 add_library(omuraisu INTERFACE)
