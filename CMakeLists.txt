@@ -78,12 +78,15 @@ target_include_directories(omuraisu_dji PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 
-add_library(omuraisu_controller INTERFACE)
-target_include_directories(omuraisu_controller INTERFACE
+add_library(omuraisu_controller
+    src/controller/controller_core.c
+    src/controller/controller_transport.c
+)
+target_include_directories(omuraisu_controller PUBLIC
     $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(omuraisu_controller INTERFACE omuraisu_can)
+target_link_libraries(omuraisu_controller PUBLIC omuraisu_can)
 
 add_library(omuraisu_servo INTERFACE)
 target_include_directories(omuraisu_servo INTERFACE
