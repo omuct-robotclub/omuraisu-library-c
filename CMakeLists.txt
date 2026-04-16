@@ -42,6 +42,14 @@ target_include_directories(omuraisu_chassis PUBLIC
 )
 target_link_libraries(omuraisu_chassis PUBLIC omuraisu_coordinate)
 
+add_library(omuraisu_cobs
+    src/cobs/cobs.c
+)
+target_include_directories(omuraisu_cobs PUBLIC
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
 add_library(omuraisu_can
     src/can/can_interface.c
     src/can/can_cube.c
@@ -102,6 +110,7 @@ target_link_libraries(omuraisu INTERFACE
     omuraisu_coordinate
     omuraisu_pid
     omuraisu_chassis
+    omuraisu_cobs
     omuraisu_can
     omuraisu_dji
     omuraisu_controller
@@ -124,7 +133,7 @@ endif()
 # インストール設定
 include(GNUInstallDirs)
 
-install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu
+install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu
     EXPORT omuraisu-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
