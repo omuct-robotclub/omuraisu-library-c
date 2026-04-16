@@ -1,4 +1,4 @@
-#include "cobs.h"
+#include "cobs/cobs.h"
 
 bool om_cobs_encode(const uint8_t* data, size_t length, uint8_t* encoded,
                     size_t* encoded_length) {

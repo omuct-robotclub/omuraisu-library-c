@@ -1,4 +1,4 @@
-#include "servo_core.h"
+#include "servo/servo_core.h"
 
 void om_servo_set_degree(ServoData* servo, float degree, size_t index) {
   if (index >= 8) {

@@ -1,4 +1,4 @@
-#include "controller_core.h"
+#include "controller/controller_core.h"
 
 bool om_ctrl_is_pressed_button(const ControllerData* data,
                                ControllerButton button) {

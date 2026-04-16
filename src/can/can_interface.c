@@ -1,4 +1,4 @@
-#include "can_interface.h"
+#include "can/can_interface.h"
 
 bool can_bus_write(CanBus* bus, const CanMessage* msg) {
   if (bus == 0 || bus->write == 0) {

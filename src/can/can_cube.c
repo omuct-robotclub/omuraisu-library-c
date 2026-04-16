@@ -1,4 +1,4 @@
-#include "can_cube.h"
+#include "can/can_cube.h"
 
 #include <string.h>
 

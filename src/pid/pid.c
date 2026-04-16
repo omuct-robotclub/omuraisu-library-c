@@ -1,4 +1,4 @@
-#include "pid.h"
+#include "pid/pid.h"
 
 PidController om_pid_init(const PidParameter parameter) {
   PidController controller;

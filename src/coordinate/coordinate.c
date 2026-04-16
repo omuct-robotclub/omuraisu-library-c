@@ -1,4 +1,4 @@
-#include "coordinate.h"
+#include "coordinate/coordinate.h"
 #include <math.h>
 
 float om_coordinate_get_axis_angle(Coordinate* self) {

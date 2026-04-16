@@ -1,4 +1,4 @@
-#include "mecanum.h"
+#include "chassis/mecanum.h"
 
 Mecanum om_mecanum_init(const Coordinate pos[4]) {
   Mecanum mecanum;

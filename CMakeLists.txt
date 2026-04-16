@@ -14,14 +14,14 @@ set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ライブラリのインクルードディレクトリ
-set(OMURAISU_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(OMURAISU_INCLUDE_DIR_C ${CMAKE_CURRENT_SOURCE_DIR}/include/omuraisu/c)
 
 # coordinateライブラリ（実装ファイルあり）
 add_library(omuraisu_coordinate
     src/coordinate/coordinate.c
 )
 target_include_directories(omuraisu_coordinate PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -29,7 +29,7 @@ add_library(omuraisu_pid
     src/pid/pid.c
 )
 target_include_directories(omuraisu_pid PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -37,7 +37,7 @@ add_library(omuraisu_chassis
     src/chassis/mecanum.c
 )
 target_include_directories(omuraisu_chassis PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(omuraisu_chassis PUBLIC omuraisu_coordinate)
@@ -46,7 +46,7 @@ add_library(omuraisu_cobs
     src/cobs/cobs.c
 )
 target_include_directories(omuraisu_cobs PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -55,7 +55,7 @@ add_library(omuraisu_can
     src/can/can_cube.c
 )
 target_include_directories(omuraisu_can PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -82,7 +82,7 @@ add_library(omuraisu_dji
     src/dji/robomas.c
 )
 target_include_directories(omuraisu_dji PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -91,7 +91,7 @@ add_library(omuraisu_controller
     src/controller/controller_transport.c
 )
 target_include_directories(omuraisu_controller PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 
@@ -99,7 +99,7 @@ add_library(omuraisu_servo
     src/servo/servo_core.c
 )
 target_include_directories(omuraisu_servo PUBLIC
-    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
     $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(omuraisu_servo PUBLIC omuraisu_can)

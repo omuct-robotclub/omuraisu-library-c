@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <string.h>
-#include "robomas_core.h"
+#include "dji/robomas_core.h"
 
 const uint16_t M3508_GEAR_RATIO = 19;
 const uint16_t M2006_GEAR_RATIO = 36;
