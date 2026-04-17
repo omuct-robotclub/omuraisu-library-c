@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 project(omuraisu-library
     VERSION 1.0.0
-    DESCRIPTION "omuraisu Library - Robot development C library"
-    LANGUAGES C
+    DESCRIPTION "omuraisu Library - Robot development C/C++ library"
+    LANGUAGES C CXX
 )
 
 # C17を使用
@@ -10,11 +10,17 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+# C++17を使用
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # コンパイルオプション
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ライブラリのインクルードディレクトリ
 set(OMURAISU_INCLUDE_DIR_C ${CMAKE_CURRENT_SOURCE_DIR}/include/omuraisu/c)
+set(OMURAISU_INCLUDE_DIR_CPP ${CMAKE_CURRENT_SOURCE_DIR}/include/omuraisu/cpp)
 
 # coordinateライブラリ（実装ファイルあり）
 add_library(omuraisu_coordinate
@@ -104,9 +110,9 @@ target_include_directories(omuraisu_servo PUBLIC
 )
 target_link_libraries(omuraisu_servo PUBLIC omuraisu_can)
 
-# メインライブラリ（全てをまとめる）
-add_library(omuraisu INTERFACE)
-target_link_libraries(omuraisu INTERFACE
+# C インターフェースライブラリ（全てをまとめる）
+add_library(omuraisu_c INTERFACE)
+target_link_libraries(omuraisu_c INTERFACE
     omuraisu_coordinate
     omuraisu_pid
     omuraisu_chassis
@@ -115,6 +121,33 @@ target_link_libraries(omuraisu INTERFACE
     omuraisu_dji
     omuraisu_controller
     omuraisu_servo
+)
+
+# C++ ラッパ ライブラリ
+
+add_library(omuraisu_cpp_cobs STATIC
+    src/cpp/cobs/cobs.cpp
+)
+target_include_directories(omuraisu_cpp_cobs PUBLIC
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_CPP}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(omuraisu_cpp_cobs PUBLIC
+    omuraisu_cobs
+)
+
+# C++ インターフェースライブラリ（全てをまとめる）
+add_library(omuraisu_cpp INTERFACE)
+target_link_libraries(omuraisu_cpp INTERFACE
+    omuraisu_cpp_cobs
+)
+
+# メインライブラリ（全てをまとめる）
+add_library(omuraisu INTERFACE)
+target_link_libraries(omuraisu INTERFACE
+    omuraisu_c
+    omuraisu_cpp
 )
 
 # サンプルのビルドオプション
@@ -133,7 +166,7 @@ endif()
 # インストール設定
 include(GNUInstallDirs)
 
-install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu
+install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu_c omuraisu_cpp_cobs omuraisu_cpp omuraisu
     EXPORT omuraisu-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -141,9 +174,9 @@ install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs 
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-install(DIRECTORY src/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/omuraisu
-    FILES_MATCHING PATTERN "*.h"
+install(DIRECTORY include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
 )
 
 install(EXPORT omuraisu-targets
