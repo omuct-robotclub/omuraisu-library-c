@@ -137,10 +137,23 @@ target_link_libraries(omuraisu_cpp_cobs PUBLIC
     omuraisu_cobs
 )
 
+add_library(omuraisu_cpp_coordinate STATIC
+    src/cpp/coordinate/coordinate.cpp
+)
+target_include_directories(omuraisu_cpp_coordinate PUBLIC
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_CPP}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(omuraisu_cpp_coordinate PUBLIC
+    omuraisu_coordinate
+)
+
 # C++ インターフェースライブラリ（全てをまとめる）
 add_library(omuraisu_cpp INTERFACE)
 target_link_libraries(omuraisu_cpp INTERFACE
     omuraisu_cpp_cobs
+    omuraisu_cpp_coordinate
 )
 
 # メインライブラリ（全てをまとめる）
@@ -166,7 +179,7 @@ endif()
 # インストール設定
 include(GNUInstallDirs)
 
-install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu_c omuraisu_cpp_cobs omuraisu_cpp omuraisu
+install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu_c omuraisu_cpp_cobs omuraisu_cpp_coordinate omuraisu_cpp omuraisu
     EXPORT omuraisu-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

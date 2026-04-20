@@ -1,7 +1,7 @@
 #include "coordinate/coordinate.h"
 #include <math.h>
 
-float om_coordinate_get_axis_angle(Coordinate* self) {
+float om_coordinate_get_axis_angle(const Coordinate* self) {
   return self->axis_ang;
 }
 
@@ -29,13 +29,11 @@ float om_coordinate_dot_product(const Coordinate* self, const Coordinate* other)
   return self->x * other->x + self->y * other->y;
 }
 
-Coordinate om_coordinate_copy(const Coordinate* other) {
-  Coordinate coord;
-  coord.x = other->x;
-  coord.y = other->y;
-  coord.ang = other->ang;
-  coord.axis_ang = other->axis_ang;
-  return coord;
+void om_coordinate_copy(Coordinate* self, const Coordinate* other) {
+  self->x = other->x;
+  self->y = other->y;
+  self->ang = other->ang;
+  self->axis_ang = other->axis_ang;
 }
 
 void om_coordinate_set_axis_angle(Coordinate* self, const float* offset) {
@@ -60,7 +58,7 @@ Coordinate om_coordinate_from_polar(const CoordinatePolar* other) {
   return coord;
 }
 
-float om_coordinate_polar_get_axis_angle(CoordinatePolar* self) {
+float om_coordinate_polar_get_axis_angle(const CoordinatePolar* self) {
   return self->axis_ang;
 }
 
@@ -92,14 +90,16 @@ void om_coordinate_polar_divide(CoordinatePolar* self, const float scalar) {
   self->ang /= scalar;
 }
 
-void om_coordinate_polar_dot_product(const CoordinatePolar* self, const CoordinatePolar* other, float* result) {
-  *result = self->r * other->r * cos(self->theta - other->theta);
+float om_coordinate_polar_dot_product(const CoordinatePolar* self, const CoordinatePolar* other) {
+  return self->r * other->r * cos(self->theta - other->theta);
 }
 
-void om_coordinate_polar_cross_product(const CoordinatePolar* self, const CoordinatePolar* other, CoordinatePolar* result) {
-  result->r = self->r * other->r * sin(self->theta - other->theta);
-  result->theta = self->theta + M_PI_2;
-  result->ang = self->ang + other->ang;
+CoordinatePolar om_coordinate_polar_cross_product(const CoordinatePolar* self, const CoordinatePolar* other) {
+  CoordinatePolar result;
+  result.r = self->r * other->r * sin(self->theta - other->theta);
+  result.theta = self->theta + M_PI_2;
+  result.ang = self->ang + other->ang;
+  return result;
 }
 
 CoordinatePolar om_coordinate_polar_init() {
@@ -108,6 +108,13 @@ CoordinatePolar om_coordinate_polar_init() {
 
 CoordinatePolar om_coordinate_polar_init_value(float r, float theta, float ang, float axis_ang) {
   return (CoordinatePolar){r, theta, ang, axis_ang};
+}
+
+void om_coordinate_polar_copy(CoordinatePolar* self, const CoordinatePolar* other) {
+  self->r = other->r;
+  self->theta = other->theta;
+  self->ang = other->ang;
+  self->axis_ang = other->axis_ang;
 }
 
 CoordinatePolar om_coordinate_polar_from_rectangular(const Coordinate* other) {
