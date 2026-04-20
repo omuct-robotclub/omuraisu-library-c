@@ -3,10 +3,21 @@
 // relative to the x-axis.
 #ifndef COORDINATE_H
 #define COORDINATE_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define _DEFAULT_SOURCE
-#include <math.h>
 
+#ifdef __cplusplus
+}
+#endif
+
+#include <math.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 // Rectangular coordinate system
 typedef struct {
   float x;
@@ -92,5 +103,7 @@ void om_coordinate_polar_convert_ang(CoordinatePolar* self, const float* ang);
 void om_coordinate_convert_ang(Coordinate* self, const float* ang);
 
 float om_coordinate_distance(const Coordinate* self, const Coordinate* other);
-
+#ifdef __cplusplus
+} // extern "C"
+#endif
 #endif  // COORDINATE_H

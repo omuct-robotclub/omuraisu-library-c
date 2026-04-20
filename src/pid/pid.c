@@ -29,7 +29,7 @@ void om_pid_set_gain(PidController* self, const PidGain gain) {
   self->parameter.gain = gain;
 }
 
-void om_pid_set_limit(PidController* self, const float max, const float min) {
-  self->parameter.max = max;
+void om_pid_set_limit(PidController* self, const float min, const float max) {
   self->parameter.min = min;
+  self->parameter.max = max;
 }
