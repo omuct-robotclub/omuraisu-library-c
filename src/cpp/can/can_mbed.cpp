@@ -10,7 +10,7 @@ namespace can {
 
 MbedCanBus::MbedCanBus(PinName rx, PinName tx, int frequency)
     : can_(new CAN(rx, tx, frequency)), owned_(true) {}
-explicit MbedCanBus::MbedCanBus(CAN& can) : can_(&can), owned_(false) {}
+MbedCanBus::MbedCanBus(CAN& can) : can_(&can), owned_(false) {}
 MbedCanBus::~MbedCanBus() {
   if (owned_) {
     delete can_;

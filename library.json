@@ -26,7 +26,8 @@
   "platforms": "*",
   "build": {
     "srcDir": "src",
-    "includeDir": "include"
+    "includeDir": "include",
+    "flags": ["-I include/omuraisu/cpp", "-I include/omuraisu/c"]
   },
   "headers": [
     "include/omuraisu/cpp/coordinate/*.hpp",
