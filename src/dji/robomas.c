@@ -65,6 +65,9 @@ RobomasData om_rm_get_data(const Robomas* rm, int id) {
 }
 
 const RobomasData* om_rm_get_data_const(const Robomas* rm, int id) {
+  if (id < 1 || id > 8) {
+    return NULL;  // IDが範囲外の場合はNULLを返す
+  }
   return &rm->core.data_[id - 1];
 }
 

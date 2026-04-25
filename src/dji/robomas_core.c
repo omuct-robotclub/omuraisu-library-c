@@ -39,6 +39,10 @@ RobomasCore om_rm_core_init() {
 }
 
 void om_rm_core_set_max_output(RobomasCore* core, int16_t max) {
+  if (max == INT16_MIN) {
+    core->max_output_ = INT16_MAX;  // INT16_MINは絶対値がINT16_MAXより大きいため、特別に処理
+    return;
+  }
   core->max_output_ = max > 0 ? max : -max;
 }
 
