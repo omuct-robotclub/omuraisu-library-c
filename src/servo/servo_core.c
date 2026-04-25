@@ -4,6 +4,11 @@ void om_servo_set_degree(ServoData* servo, float degree, size_t index) {
   if (index >= 8) {
     return;
   }
+  if (degree < 0.0f) {
+    degree = 0.0f;
+  } else if (degree > 180.0f) {
+    degree = 180.0f;
+  }
   uint8_t value = (uint8_t)(degree / 180.0f * 255);
   servo->data[index] = value;
 }
