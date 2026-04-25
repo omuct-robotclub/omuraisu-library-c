@@ -201,6 +201,19 @@ target_link_libraries(omuraisu_cpp_pid PUBLIC
     omuraisu_pid
 )
 
+add_library(omuraisu_cpp_servo STATIC
+    src/cpp/servo/servo_core.cpp
+)
+target_include_directories(omuraisu_cpp_servo PUBLIC
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_CPP}>
+    $<BUILD_INTERFACE:${OMURAISU_INCLUDE_DIR_C}>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(omuraisu_cpp_servo PUBLIC
+    omuraisu_servo
+    omuraisu_cpp_can
+)
+
 # C++ インターフェースライブラリ（全てをまとめる）
 add_library(omuraisu_cpp INTERFACE)
 target_link_libraries(omuraisu_cpp INTERFACE
@@ -210,6 +223,7 @@ target_link_libraries(omuraisu_cpp INTERFACE
     omuraisu_cpp_coordinate
     omuraisu_cpp_dji
     omuraisu_cpp_pid
+    omuraisu_cpp_servo
 )
 
 # メインライブラリ（全てをまとめる）
@@ -235,7 +249,7 @@ endif()
 # インストール設定
 include(GNUInstallDirs)
 
-install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu_c omuraisu_cpp_can omuraisu_cpp_chassis omuraisu_cpp_cobs omuraisu_cpp_coordinate omuraisu_cpp_dji omuraisu_cpp_pid omuraisu_cpp omuraisu
+install(TARGETS omuraisu_coordinate omuraisu_pid omuraisu_chassis omuraisu_cobs omuraisu_can omuraisu_dji omuraisu_controller omuraisu_servo omuraisu_c omuraisu_cpp_can omuraisu_cpp_chassis omuraisu_cpp_cobs omuraisu_cpp_coordinate omuraisu_cpp_dji omuraisu_cpp_pid omuraisu_cpp omuraisu_cpp_servo omuraisu
     EXPORT omuraisu-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

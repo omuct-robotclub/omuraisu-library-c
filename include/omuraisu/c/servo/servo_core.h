@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct {
   uint8_t data[8];
   uint32_t id;
@@ -15,5 +18,7 @@ void om_servo_set_degrees(ServoData* servo, const float degrees[8]);
 uint8_t om_servo_get_degree(const ServoData* servo, size_t index);
 void om_servo_get_degrees(const ServoData* servo, float degrees[8]);
 CanMessage om_servo_to_can_message(const ServoData* servo);
-
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 #endif  // SERVO_CORE_H
