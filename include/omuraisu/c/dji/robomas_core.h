@@ -3,12 +3,18 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern const uint16_t M3508_GEAR_RATIO;
 extern const uint16_t M2006_GEAR_RATIO;
 extern const uint16_t ANGLE_MAX_VALUE;
 
 extern const uint32_t TX_ID_GROUP1;
 extern const uint32_t TX_ID_GROUP2;
+
+
 
 /// @brief Robomasから受信したモーターデータ
 typedef struct {
@@ -52,4 +58,7 @@ uint8_t om_rm_core_get_temp(const RobomasCore* core, int id);
 
 RobomasData om_rm_core_get_data(const RobomasCore* core, int id);
 
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 #endif  // ROBOMAS_CORE_H

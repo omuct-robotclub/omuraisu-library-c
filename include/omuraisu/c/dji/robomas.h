@@ -4,6 +4,12 @@
 #include "can/can_interface.h"
 #include "robomas_core.h"
 
+#include <stddef.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
   CanBus* can;
   RobomasCore core;
@@ -38,4 +44,8 @@ const RobomasData* om_rm_get_data_const(const Robomas* rm, int id);
 RobomasCore om_rm_get_core(const Robomas* rm);
 
 const RobomasCore* om_rm_get_core_const(const Robomas* rm);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 #endif  // ROBOMAS_H
