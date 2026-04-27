@@ -6,6 +6,10 @@
 
 #include "controller_core.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /// @brief シリアル通信用のパケット構造体（COBS用）
 typedef struct __attribute__((packed)) {
   uint8_t header;
@@ -58,8 +62,17 @@ SerialPacket om_ctrl_serial_packet_from_data(const ControllerData* data);
 ControllerData om_ctrl_serial_packet_to_data(const SerialPacket* packet);
 ControllerData om_ctrl_data_from_serial(const SerialPacket* packet);
 ControllerData om_ctrl_data_from_can(uint32_t id, const uint8_t data[8]);
+bool om_ctrl_data_to_can_analog(const ControllerData* data, uint8_t out[8]);
+bool om_ctrl_data_to_can_buttons(const ControllerData* data, uint8_t out[8]);
 ControllerData om_ctrl_data_from_ros_joy(const float* axes, size_t axes_size,
                                          const int32_t* buttons,
                                          size_t buttons_size);
+bool om_ctrl_data_to_ros_joy(const ControllerData* data, float* axes,
+                             size_t axes_size, int32_t* buttons,
+                             size_t buttons_size);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // CONTROLLER_TRANSPORT_H

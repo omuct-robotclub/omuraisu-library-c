@@ -138,6 +138,71 @@ ControllerData om_ctrl_data_from_can(uint32_t id, const uint8_t data[8]) {
   }
 }
 
+bool om_ctrl_data_to_can_analog(const ControllerData* data, uint8_t out[8]) {
+  if (data == NULL || out == NULL) {
+    return false;
+  }
+
+  out[0] = (uint8_t)(int8_t)(data->left_x * 127.0f);
+  out[1] = (uint8_t)(int8_t)(data->left_y * 127.0f);
+  out[2] = (uint8_t)(int8_t)(data->right_x * 127.0f);
+  out[3] = (uint8_t)(int8_t)(data->right_y * 127.0f);
+  out[4] = (uint8_t)(data->l2_trigger * 255.0f);
+  out[5] = (uint8_t)(data->r2_trigger * 255.0f);
+  out[6] = 0;
+  out[7] = 0;
+  return true;
+}
+
+bool om_ctrl_data_to_can_buttons(const ControllerData* data, uint8_t out[8]) {
+  if (data == NULL || out == NULL) {
+    return false;
+  }
+
+  out[0] = 0;
+  out[1] = 0;
+  out[2] = 0;
+  out[3] = 0;
+  out[4] = 0;
+  out[5] = 0;
+  out[6] = 0;
+  out[7] = 0;
+
+  if ((data->dpad & OM_CONTROLLER_DPAD_DOWN) != 0) {
+    out[0] |= 0x01;
+  }
+  if ((data->dpad & OM_CONTROLLER_DPAD_LEFT) != 0) {
+    out[0] |= 0x02;
+  }
+  if ((data->dpad & OM_CONTROLLER_DPAD_UP) != 0) {
+    out[0] |= 0x04;
+  }
+  if ((data->dpad & OM_CONTROLLER_DPAD_RIGHT) != 0) {
+    out[0] |= 0x08;
+  }
+
+  if ((data->buttons & OM_CONTROLLER_BUTTON_CROSS) != 0) {
+    out[1] |= 0x01;
+  }
+  if ((data->buttons & OM_CONTROLLER_BUTTON_SQUARE) != 0) {
+    out[1] |= 0x02;
+  }
+  if ((data->buttons & OM_CONTROLLER_BUTTON_TRIANGLE) != 0) {
+    out[1] |= 0x04;
+  }
+  if ((data->buttons & OM_CONTROLLER_BUTTON_CIRCLE) != 0) {
+    out[1] |= 0x08;
+  }
+
+  out[2] = (data->buttons & OM_CONTROLLER_BUTTON_L1) != 0 ? 1 : 0;
+  out[3] = (data->buttons & OM_CONTROLLER_BUTTON_R1) != 0 ? 1 : 0;
+  out[4] = (data->buttons & OM_CONTROLLER_BUTTON_L3) != 0 ? 1 : 0;
+  out[5] = (data->buttons & OM_CONTROLLER_BUTTON_R3) != 0 ? 1 : 0;
+  out[6] = (data->buttons & OM_CONTROLLER_BUTTON_OPTIONS) != 0 ? 1 : 0;
+  out[7] = (data->buttons & OM_CONTROLLER_BUTTON_SHARE) != 0 ? 1 : 0;
+  return true;
+}
+
 ControllerData om_ctrl_data_from_ros_joy(const float* axes, size_t axes_size,
                                         const int32_t* buttons,
                                         size_t buttons_size) {
@@ -200,4 +265,53 @@ ControllerData om_ctrl_data_from_ros_joy(const float* axes, size_t axes_size,
   }
 
   return controller;
+}
+
+bool om_ctrl_data_to_ros_joy(const ControllerData* data, float* axes,
+               size_t axes_size, int32_t* buttons,
+               size_t buttons_size) {
+  if (data == NULL || axes == NULL || buttons == NULL ||
+    axes_size <= OM_CONTROLLER_AXIS_R2 ||
+    buttons_size <= OM_CONTROLLER_BUTTON_INDEX_OPTIONS) {
+  return false;
+  }
+
+  axes[OM_CONTROLLER_AXIS_LEFT_X] = data->left_x;
+  axes[OM_CONTROLLER_AXIS_LEFT_Y] = data->left_y;
+  axes[OM_CONTROLLER_AXIS_RIGHT_X] = data->right_x;
+  axes[OM_CONTROLLER_AXIS_RIGHT_Y] = data->right_y;
+  axes[OM_CONTROLLER_AXIS_L2] = data->l2_trigger;
+  axes[OM_CONTROLLER_AXIS_R2] = data->r2_trigger;
+
+  buttons[OM_CONTROLLER_BUTTON_INDEX_CIRCLE] =
+    (data->buttons & OM_CONTROLLER_BUTTON_CIRCLE) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_CROSS] =
+    (data->buttons & OM_CONTROLLER_BUTTON_CROSS) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_SQUARE] =
+    (data->buttons & OM_CONTROLLER_BUTTON_SQUARE) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_TRIANGLE] =
+    (data->buttons & OM_CONTROLLER_BUTTON_TRIANGLE) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_L1] =
+    (data->buttons & OM_CONTROLLER_BUTTON_L1) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_R1] =
+    (data->buttons & OM_CONTROLLER_BUTTON_R1) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_L3] =
+    (data->buttons & OM_CONTROLLER_BUTTON_L3) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_R3] =
+    (data->buttons & OM_CONTROLLER_BUTTON_R3) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_SHARE] =
+    (data->buttons & OM_CONTROLLER_BUTTON_SHARE) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_OPTIONS] =
+    (data->buttons & OM_CONTROLLER_BUTTON_OPTIONS) != 0 ? 1 : 0;
+
+  buttons[OM_CONTROLLER_BUTTON_INDEX_DPAD_UP] =
+    (data->dpad & OM_CONTROLLER_DPAD_UP) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_DPAD_DOWN] =
+    (data->dpad & OM_CONTROLLER_DPAD_DOWN) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_DPAD_LEFT] =
+    (data->dpad & OM_CONTROLLER_DPAD_LEFT) != 0 ? 1 : 0;
+  buttons[OM_CONTROLLER_BUTTON_INDEX_DPAD_RIGHT] =
+    (data->dpad & OM_CONTROLLER_DPAD_RIGHT) != 0 ? 1 : 0;
+
+  return true;
 }

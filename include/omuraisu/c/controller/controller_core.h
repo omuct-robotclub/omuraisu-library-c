@@ -1,9 +1,13 @@
 #ifndef CONTROLLER_CORE_H
 #define CONTROLLER_CORE_H
 
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /// @brief PS5コントローラーのボタンビットフラグ
 typedef enum {
@@ -16,15 +20,15 @@ typedef enum {
   OM_CONTROLLER_BUTTON_L3 = 0x0040,        ///< L3 (bit 6)
   OM_CONTROLLER_BUTTON_R3 = 0x0080,        ///< R3 (bit 7)
   OM_CONTROLLER_BUTTON_SHARE = 0x0100,     ///< Share (bit 8)
-  OM_CONTROLLER_BUTTON_OPTIONS = 0x0200,    ///< Options (bit 9)
+  OM_CONTROLLER_BUTTON_OPTIONS = 0x0200,   ///< Options (bit 9)
 } ControllerButton;
 
 /// @brief D-Padのビットフラグ
 typedef enum {
   OM_CONTROLLER_DPAD_UP = 0x01,     ///< 上
   OM_CONTROLLER_DPAD_RIGHT = 0x02,  ///< 右
-  OM_CONTROLLER_DPAD_DOWN = 0x04,    ///< 下
-  OM_CONTROLLER_DPAD_LEFT = 0x08,    ///< 左
+  OM_CONTROLLER_DPAD_DOWN = 0x04,   ///< 下
+  OM_CONTROLLER_DPAD_LEFT = 0x08,   ///< 左
 } ControllerDPad;
 
 /// @brief PS5コントローラーデータ（プラットフォーム非依存）
@@ -61,5 +65,9 @@ bool om_ctrl_l3(const ControllerData* data);
 bool om_ctrl_r3(const ControllerData* data);
 bool om_ctrl_share(const ControllerData* data);
 bool om_ctrl_options(const ControllerData* data);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
 
 #endif  // CONTROLLER_CORE_H
