@@ -1,18 +1,21 @@
 # omuraisu-library
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://isocpp.org/)
+[![C11](https://img.shields.io/badge/C-11-blue.svg)](https://en.cppreference.com/w/c/language)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
 
-ロボット開発において頻繁に使用される基本的な機能を提供する C++ ライブラリ群です。
+ロボット開発において頻繁に使用される基本的な機能を提供する C / C++ ライブラリ群です。
 
-PlatformIO / CMake の両方に対応しており、組み込み（mbed）からデスクトップまで幅広い環境で利用できます。
+PlatformIO / CMake の両方に対応しており、組み込み（CubeMX, Mbedなど）からデスクトップまで幅広い環境で利用できます。
 
 ## 目次
 
 - [インストール](#インストール)
+- [C API / CPP API の使い分け](#c-api--cpp-api-の使い分け)
 - [モジュール一覧](#モジュール一覧)
   - [coordinate — 2D 座標演算](#coordinate--2d-座標演算)
   - [chassis — メカナムホイール制御](#chassis--メカナムホイール制御)
+  - [cobs — COBS エンコード/デコード](#cobs--cobs-エンコードデコード)
   - [pid — PID 制御](#pid--pid-制御)
   - [dji — DJI ロボマスモーター制御](#dji--dji-ロボマスモーター制御)
   - [can — CAN バス抽象化](#can--can-バス抽象化)
@@ -32,8 +35,35 @@ PlatformIO / CMake の両方に対応しており、組み込み（mbed）から
 `platformio.ini` に以下を追加してください。
 
 ```ini
-lib_deps = https://github.com/omuct-robotclub/omuraisu-library.git
+lib_deps = https://github.com/omuct-robotclub/omuraisu-library-c.git
 ```
+
+### CubeMX
+
+**Project Manager** で **Toolchain / IDE** を **CMake** に設定し、CMake のインストール方法に従ってください。C++ ラッパを使う場合は C++17 を有効化してください。
+
+```cmake
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+```
+
+STM32 Cube HAL 向け CAN アダプタ（`can_stm32`）を使う場合は、追加で以下の設定が必要です。
+
+```cmake
+target_compile_definitions(omuraisu_can PRIVATE
+    USE_HAL_DRIVER
+    <使用MCU名>
+)
+target_include_directories(omuraisu_can PRIVATE
+    ${CMAKE_SOURCE_DIR}/Core/Inc
+    ${CMAKE_SOURCE_DIR}/Drivers/<使用MCU名>_HAL_Driver/Inc
+    ${CMAKE_SOURCE_DIR}/Drivers/<使用MCU名>_HAL_Driver/Inc/Legacy
+    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Device/ST/<使用MCU名>/Include
+    ${CMAKE_SOURCE_DIR}/Drivers/CMSIS/Include
+)
+```
+
+`<使用MCU名>` には `STM32F446xx` などが入ります。環境に合うように変更してください。
 
 ### CMake（FetchContent）
 
@@ -47,6 +77,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(omuraisu)
 
 target_link_libraries(your_target PRIVATE omuraisu)
+```
+
+```cmake
+# C API を使う場合
+target_link_libraries(your_c_target PRIVATE omuraisu::omuraisu_c)
+
+# C++ ラッパ API を使う場合
+target_link_libraries(your_cpp_target PRIVATE omuraisu::omuraisu_cpp)
 ```
 
 ### CMake（システムインストール）
@@ -63,7 +101,29 @@ find_package(omuraisu REQUIRED)
 target_link_libraries(your_target PRIVATE omuraisu::omuraisu)
 ```
 
-> 個別モジュールのみをリンクすることも可能です（`omuraisu::coordinate`, `omuraisu::omuraisu_pid` など）。
+> 個別モジュールのみをリンクすることも可能です（例: `omuraisu::omuraisu_pid`, `omuraisu::omuraisu_cpp_pid`）。
+
+---
+
+## C API / CPP API の使い分け
+
+本ライブラリは C 実装を基盤に、同等機能を C++ から扱いやすくするラッパを提供します。
+
+| 種別    | インクルード例           | CMake ターゲット例                                      |
+| ------- | ------------------------ | ------------------------------------------------------- |
+| C API   | `#include "pid/pid.h"`   | `omuraisu::omuraisu_c` / `omuraisu::omuraisu_pid`       |
+| C++ API | `#include "pid/pid.hpp"` | `omuraisu::omuraisu_cpp` / `omuraisu::omuraisu_cpp_pid` |
+
+```cpp
+#include "chassis/mecanum.hpp"
+#include "coordinate/coordinate.hpp"
+
+omuraisu::coordinate::Velocity vel(1.0f, 0.0f, 0.0f, 0.0f);
+omuraisu::chassis::Mecanum mecanum(0.2f);
+
+float wheel_speed[4] = {0};
+mecanum.calc(vel, wheel_speed);
+```
 
 ---
 
@@ -71,221 +131,246 @@ target_link_libraries(your_target PRIVATE omuraisu::omuraisu)
 
 ### coordinate — 2D 座標演算
 
-**ヘッダ:** `coordinate/coordinate.hpp`
-**名前空間:** `coordinate`
+**ヘッダ:** `coordinate/coordinate.h`
 
-2D の直交座標・極座標および速度を扱う構造体と演算を提供します。
+2D の直交座標・極座標および速度を扱う C 構造体と演算関数を提供します。
 
-| 型 | 説明 |
-|---|---|
-| `Coordinate` | 直交座標（`x`, `y`, `ang`, `axis_ang`） |
+| 型                | 説明                                      |
+| ----------------- | ----------------------------------------- |
+| `Coordinate`      | 直交座標（`x`, `y`, `ang`, `axis_ang`）   |
 | `CoordinatePolar` | 極座標（`r`, `theta`, `ang`, `axis_ang`） |
-| `Velocity` | `Coordinate` のエイリアス |
-| `VelocityPolar` | `CoordinatePolar` のエイリアス |
+| `Velocity`        | `Coordinate` のエイリアス                 |
+| `VelocityPolar`   | `CoordinatePolar` のエイリアス            |
 
-```cpp
-using namespace coordinate;
+```c
+#include "coordinate/coordinate.h"
 
-// 直交座標 ↔ 極座標の相互変換
-Coordinate cart(3.0f, 4.0f);
-CoordinatePolar polar(cart);  // r=5.0, theta=atan2(4,3)
+Coordinate a = om_coordinate_init_value(1.0f, 2.0f, 0.0f, 0.0f);
+Coordinate b = om_coordinate_init_value(3.0f, 4.0f, 0.0f, 0.0f);
+om_coordinate_add(&a, &b);
 
-// 算術演算
-Coordinate a(1.0f, 2.0f), b(3.0f, 4.0f);
-a += b;  // a = {4.0, 6.0, 0.0}
-a *= 2.0f;
-
-// 座標系の回転
-convert_ang(cart, M_PI / 2);
-
-// 2点間の距離
-float d = distance(a, b);
+CoordinatePolar p = om_coordinate_polar_from_rectangular(&a);
+float d = om_coordinate_distance(&a, &b);
 ```
 
 ### chassis — メカナムホイール制御
 
-**ヘッダ:** `chassis/mecanum.hpp`
-**名前空間:** `chassis`
+**ヘッダ:** `c/chassis/mecanum.h`, `cpp/chassis/mecanum.hpp`
 
-メカナムホイール（4 輪）の逆運動学計算を行い、指定した速度ベクトルから各ホイールの目標速度を算出します。
+メカナムホイール（4 輪）の逆運動学計算を C API で提供します。指定した速度ベクトルから各ホイールの目標速度を算出できます。
 
-| クラス | 説明 |
-|---|---|
-| `Mecanum` | 4 輪メカナムの速度計算 |
+| 型        | 説明                     |
+| --------- | ------------------------ |
+| `Mecanum` | 4 輪メカナムの設定と状態 |
 
-```cpp
-using namespace chassis;
+```c
+#include "chassis/mecanum.h"
 
-// 各ホイールの位置を極座標で指定
-std::array<CoordinatePolar, 4> wheel_pos = {
-  CoordinatePolar(0.2f,     M_PI / 4),
-  CoordinatePolar(0.2f, 3 * M_PI / 4),
-  CoordinatePolar(0.2f, 5 * M_PI / 4),
-  CoordinatePolar(0.2f, 7 * M_PI / 4),
-};
-Mecanum mecanum(wheel_pos);
-// ホイールの中心からの半径でホイール位置を指定(各ホイールが正方形に配置されている場合)
-float radius = 300;
-Mecanum mecanum(radius);
+Mecanum mecanum = om_mecanum_init_radius(0.2f);
+Velocity vel = {.x = 1.0f, .y = 0.0f, .ang = 0.0f, .axis_ang = 0.0f};
+float wheel_speed[4] = {0};
 
-// 目標速度 → 各ホイール速度
-Velocity vel = {1.0f, 0.0f, 0.0f};  // 前進
-float result[4];
-mecanum.calc(vel, result);
+om_mecanum_calc(&mecanum, &vel, wheel_speed);
+```
+
+### cobs — COBS エンコード/デコード
+
+**ヘッダ:** `c/cobs/cobs.h`, `cpp/cobs/cobs.hpp`
+
+シリアル通信で使いやすい COBS（Consistent Overhead Byte Stuffing）形式のエンコード/デコードを提供します。
+
+| 型 / 関数群      | 説明                         |
+| ---------------- | ---------------------------- |
+| `om_cobs_encode` | 生バイト列を COBS 形式へ変換 |
+| `om_cobs_decode` | COBS 形式のデータを復元      |
+
+```c
+#include "cobs/cobs.h"
+
+const uint8_t raw[] = {0x11, 0x00, 0x22};
+uint8_t encoded[16] = {0};
+uint8_t decoded[16] = {0};
+
+size_t enc_len = sizeof(encoded);
+size_t dec_len = sizeof(decoded);
+bool enc_ok = om_cobs_encode(raw, sizeof(raw), encoded, &enc_len);
+bool dec_ok = om_cobs_decode(encoded, enc_len, decoded, &dec_len);
 ```
 
 ### pid — PID 制御
 
-**ヘッダ:** `pid/pid.hpp`
-**名前空間:** `pid`
+**ヘッダ:** `c/pid/pid.h`, `cpp/pid/pid.hpp`
 
-出力リミット付きの PID コントローラを提供します。
+出力リミット付きの PID コントローラを C API で提供します。
 
 $$
 u(t) = K_p \, e(t) + K_i \int_0^t e(\tau)\,d\tau + K_d \frac{de}{dt}
 $$
 
-| 型 | 説明 |
-|---|---|
-| `PidGain` | ゲイン（`kp`, `ki`, `kd`） |
-| `PidParameter` | ゲイン + 出力上下限（`gain`, `min`, `max`） |
-| `Pid` | PID 制御クラス |
+| 型              | 説明                                             |
+| --------------- | ------------------------------------------------ |
+| `PidGain`       | ゲイン（`kp`, `ki`, `kd`）                       |
+| `PidParameter`  | ゲイン + 出力上下限（`gain`, `min`, `max`）      |
+| `PidController` | PID 制御の内部状態（前回偏差・積分値などを保持） |
 
-```cpp
-pid::PidParameter param = {
+```c
+#include "pid/pid.h"
+
+PidParameter param = {
   .gain = {.kp = 1.0f, .ki = 0.1f, .kd = 0.01f},
   .min = -100.0f,
   .max = 100.0f,
 };
-pid::Pid pid(param);
+PidController pid = om_pid_init(param);
 
-float output = pid.calc(/*goal=*/100.0f, /*actual=*/0.0f, /*dt=*/0.01f);
-
-pid.reset();  // 積分値・前回偏差をクリア
+float output = om_pid_calc(&pid, 100.0f, 0.0f, 0.01f);
+om_pid_reset(&pid);
 ```
 
 ### dji — DJI ロボマスモーター制御
 
-**ヘッダ:** `dji/robomas.hpp`, `dji/robomas_core.hpp`
-**名前空間:** `dji`
+**ヘッダ:** `c/dji/robomas.h`, `c/dji/robomas_core.h`, `cpp/dji/robomas.hpp`, `cpp/dji/robomas_core.hpp`
 
-DJI M3508 / C620 モーターの CAN 通信プロトコルを実装します。最大 8 軸を同時制御できます。
+DJI M3508 / C620 モーター向けの CAN 制御ロジックを C API で提供します。最大 8 軸を同時制御できます。
 
-| クラス | 説明 |
-|---|---|
+| 型            | 説明                                               |
+| ------------- | -------------------------------------------------- |
 | `RobomasData` | モーターフィードバック（角度・回転数・電流・温度） |
-| `RobomasCore` | プラットフォーム非依存のコアロジック |
-| `Robomas` | `RobomasCore` + `ICanBus` を組み合わせた高レベル API |
+| `RobomasCore` | プラットフォーム非依存のコアロジック               |
+| `Robomas`     | `CanBus` と `RobomasCore` をまとめた制御ハンドラ   |
 
-```cpp
-// mbed 環境の例
-can::MbedCanBus can_bus(PA_11, PA_12);
-dji::Robomas robomas(can_bus);
+```c
+#include "dji/robomas.h"
 
-// モーター出力を設定（ID: 1〜8）
-robomas.set_output(5000, 1);
+Robomas rm = om_rm_init(&bus);
+om_rm_set_output(&rm, 5000, 1);
+om_rm_set_output_percent(&rm, 0.5f, 2);
+om_rm_write(&rm);
 
-// パーセント指定も可能（-1.0 〜 1.0）
-robomas.set_output_percent(0.5f, 2);
-
-// CAN 送信
-robomas.write();
-
-// フィードバック受信
-int motor_idx = robomas.read_data();
+int motor_idx = om_rm_read(&rm);
 if (motor_idx >= 0) {
-  uint16_t angle = robomas.get_angle(motor_idx + 1);
-  int16_t rpm    = robomas.get_rpm(motor_idx + 1);
+  uint16_t angle = om_rm_get_angle(&rm, motor_idx + 1);
+  int16_t rpm = om_rm_get_rpm(&rm, motor_idx + 1);
 }
 ```
 
 ### can — CAN バス抽象化
 
-**ヘッダ:** `can/can_interface.hpp`, `can/can_mbed.hpp`
-**名前空間:** `can`
+プラットフォーム非依存の CAN バスインターフェースを C API で定義します。
 
-プラットフォーム非依存の CAN バスインターフェースを定義します。
+#### C 側実装
 
-| 型 | 説明 |
-|---|---|
-| `CanMessage` | CAN メッセージ（ID, データ, 長さ） |
-| `ICanBus` | 抽象 CAN バスインターフェース（`write` / `read`） |
-| `MbedCanBus` | mbed 環境向け実装 |
+**ヘッダ:** `c/can/can_interface.h`, `c/can/can_cube.h`, `c/can/can_stm32.h`
 
-```cpp
-// mbed の例
-can::MbedCanBus bus(PA_11, PA_12, 1000000);
+| 型                | 説明                                       |
+| ----------------- | ------------------------------------------ |
+| `CanMessage`      | CAN メッセージ（ID, データ, 長さ）         |
+| `CanBus`          | 抽象 CAN バスインターフェース              |
+| `CanCube`         | Cube HAL 向けの受信キュー付き CAN ブリッジ |
+| `CanStm32Context` | STM32 HAL 用の登録コンテキスト             |
 
-can::CanMessage msg;
+```c
+#include "can/can_interface.h"
+
+CanMessage msg = {0};
 msg.id = 0x200;
 msg.data[0] = 0xFF;
 msg.len = 1;
+
+can_bus_write(&bus, &msg);
+```
+
+Cube HAL で受信コールバックと組み合わせる場合は、`can_cube` に `can_stm32` の ops を渡して使います。
+
+#### C++ 側実装
+
+**ヘッダ:** `cpp/can/can_interface.hpp`, `cpp/can/can_mbed.hpp` （mbed 環境のみ）
+
+- `ICanBus`: C++ 側の抽象インターフェース（仮想関数ベース）
+- `CCanBusAdapter`: C 実装（CanBus）を C++ ユーザーに ICanBus として提供
+- `MbedCanBus`: mbed ハードウェア用 ICanBus 実装（C++ 専用）
+
+```cpp
+#include "can/can_interface.hpp"
+#include "can/can_mbed.hpp"
+
+// mbed 環境で CAN バスを初期化
+omuraisu::can::MbedCanBus bus(p9, p10);  // RX, TX ピン
+
+omuraisu::can::CanMessage msg{0x123, {0x01, 0x02}, 2};
 bus.write(msg);
+
+if (bus.read(msg)) {
+  // メッセージ受信
+}
+```
+
+```c
+CanCube cube;
+CanStm32Context stm32;
+CanCubeOps ops;
+
+can_stm32_context_init(&stm32, &cube, &hcan1, CAN_STM32_KIND_CAN, 0);
+can_stm32_make_ops(&ops);
+can_cube_init(&cube, &stm32, &ops);
+can_stm32_register(&stm32);
+can_cube_start_read(&cube);
+CanBus* bus = can_cube_bus(&cube);
+
+
+void Can_Callback(const CanMessage* msg, void* user_arg);
+can_cube_set_rx_callback(&cube, Can_Callback, NULL); // CAN受信時のコールバックを登録(任意)
+
+// HAL callback 内
+// HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+// {
+//   can_stm32_dispatch_rx(hcan);
+// }
 ```
 
 ### controller — コントローラ入力
 
-**ヘッダ:** `controller/controller_core.hpp`, `controller/controller_can.hpp`, `controller/controller_serial.hpp`
-**名前空間:** `controller`
+**ヘッダ:** `c/controller/controller_core.h`, `c/controller/controller_transport.h`, `cpp/controller/controller_core.hpp`, `cpp/controller/controller_transport.hpp`
 
-PS5 コントローラからの入力を受信・パースします。CAN 通信・シリアル（COBS）通信・ROS2 Joy メッセージの 3 つの入力方式に対応しています。
+PS5 コントローラ入力を扱うデータ型と、CAN/シリアル/ROS Joy からの変換関数を C API で提供します。
 
-> **依存:** シリアル通信を使用する場合 [cobs-serial-manager](https://github.com/NekoChan9382/cobs-serial-manager) が必要です。
+| 型 / 関数群                                                        | 説明                           |
+| ------------------------------------------------------------------ | ------------------------------ |
+| `ControllerData`                                                   | コントローラ状態とボタン定義   |
+| `om_ctrl_*`（`controller_core.h`）                                 | ボタン判定・方向判定のヘルパー |
+| `SerialPacket` / `om_ctrl_data_from_*`（`controller_transport.h`） | シリアル・CAN・ROS Joy の変換  |
 
-| 型 | 説明 |
-|---|---|
-| `ControllerData` | コントローラの状態（スティック・トリガー・ボタン） |
-| `Button` / `DPad` | ボタン / 十字キーの列挙型 |
-| `CanParser` | CAN フレームからのパーサ |
-| `RosJoyParser` | ROS2 `sensor_msgs/msg/Joy` からのパーサ |
-| `CanController` | CAN 経由でのコントローラ受信クラス |
-| `SerialController` | シリアル（COBS）経由でのコントローラ受信クラス |
+```c
+#include "controller/controller_core.h"
+#include "controller/controller_transport.h"
 
-```cpp
-// CAN 経由
-can::MbedCanBus can_bus(PA_11, PA_12);
-controller::CanController ctrl(can_bus);
-
-if (ctrl.read()) {
-  const auto& data = ctrl.data();
-  float lx = data.left_x;   // -1.0 〜 1.0
-  bool  a  = data.circle();  // ○ボタン
-  bool  up = data.is_pressed(controller::DPad::Up);
+ControllerData data = om_ctrl_data_from_can(can_id, can_payload);
+if (om_ctrl_cross(&data)) {
+  // CROSS ボタンが押されている
 }
 
-// ROS2 経由（テンプレート対応）
-controller::RosJoyParser parser;
-parser.parse(joy_msg);  // sensor_msgs::msg::Joy
+SerialPacket pkt = om_ctrl_serial_packet_from_data(&data);
+bool valid = om_ctrl_serial_packet_verify_checksum(&pkt);
 ```
 
 ### servo — サーボ制御
 
-**ヘッダ:** `servo/servo_core.hpp`
-**名前空間:** `servo`
+**ヘッダ:** `c/servo/servo_core.h`, `cpp/servo/servo_core.hpp`
 
-CAN 経由でサーボモーターを制御するための機能を提供します。角度（0〜180°）を内部で 0〜255 の値に変換し、CAN メッセージとして送信できます。
+角度（0〜180°）を 0〜255 に変換して CAN メッセージ化するサーボ制御 API を提供します。
 
-| クラス | 説明 |
-|---|---|
-| `ServoCore` | サーボ制御のコアロジック（プラットフォーム非依存） |
+| 型          | 説明                               |
+| ----------- | ---------------------------------- |
+| `ServoData` | 8ch サーボ値と送信先 CAN ID を保持 |
 
-**主なメソッド:**
+```c
+#include "servo/servo_core.h"
 
-| メソッド | 説明 |
-|---|---|
-| `ServoCore(uint8_t id)` | CAN ID を指定して初期化 |
-| `set_degree(float degree)` | 角度（0〜180°）を設定 |
-| `set_degree(float degrees[8])` | 8 チャンネル分の角度を一括設定 |
-| `to_can_message()` | 現在の状態を `CANMessage` に変換 |
+ServoData servo = {.data = {0}, .id = 0x10};
+om_servo_set_degree(&servo, 90.0f, 0);
 
-```cpp
-servo::ServoCore servo(0x10);  // CAN ID を指定
-
-// 単一角度を設定
-servo.set_degree(90.0f);
-
-// CAN メッセージとして取得・送信
-auto msg = servo.to_can_message();
+CanMessage msg = om_servo_to_can_message(&servo);
+can_bus_write(&bus, &msg);
 ```
 
 ---
@@ -294,11 +379,12 @@ auto msg = servo.to_can_message();
 
 `examples/` ディレクトリにサンプルプログラムがあります。
 
-| ファイル | 内容 |
-|---|---|
-| `coordinate_example.cpp` | 座標の生成・変換・演算 |
-| `mecanum_example.cpp` | メカナムホイールの速度計算 |
-| `pid_example.cpp` | PID 制御シミュレーション（100 ステップ） |
+| ファイル                       | 内容                                     |
+| ------------------------------ | ---------------------------------------- |
+| `coordinate_generic_example.c` | C API での座標演算の基本例               |
+| `coordinate_example.cpp`       | 座標の生成・変換・演算                   |
+| `mecanum_example.cpp`          | メカナムホイールの速度計算               |
+| `pid_example.cpp`              | PID 制御シミュレーション（100 ステップ） |
 
 サンプルをビルドするには：
 
@@ -314,7 +400,8 @@ cmake --build .
 ### 要件
 
 - CMake 3.14 以上
-- C++17 対応コンパイラ
+- C11 対応コンパイラ
+- C++ ラッパを使う場合は C++17 対応コンパイラ
 
 ### ビルド手順
 
@@ -326,10 +413,12 @@ cmake --build .
 
 ### ビルドオプション
 
-| オプション | 説明 | デフォルト |
-|---|---|---|
-| `BUILD_EXAMPLES` | サンプルプログラムをビルド | `OFF` |
-| `BUILD_TESTS` | テストをビルド | `OFF` |
+| オプション                        | 説明                                     | デフォルト |
+| --------------------------------- | ---------------------------------------- | ---------- |
+| `BUILD_EXAMPLES`                  | サンプルプログラムをビルド               | `OFF`      |
+| `BUILD_TESTS`                     | テストをビルド                           | `OFF`      |
+| `OMURAISU_CAN_STM32_ENABLE`       | STM32 Cube HAL 向け CAN アダプタを有効化 | `OFF`      |
+| `OMURAISU_CAN_STM32_FDCAN_ENABLE` | STM32 アダプタで FDCAN 対応を有効化      | `ON`       |
 
 ---
 
@@ -344,10 +433,17 @@ cmake --build .
 ctest --output-on-failure
 ```
 
-| テストファイル | 内容 |
-|---|---|
-| `tests/coordinate_test.cpp` | 座標の構築・演算・変換 |
-| `tests/pid_test.cpp` | 比例制御・出力制限・リセット |
+| テストファイル                  | 内容                                 |
+| ------------------------------- | ------------------------------------ |
+| `tests/cobs_test.c`             | C API の COBS エンコード/デコード    |
+| `tests/cobs_cpp_test.cpp`       | C++ ラッパ COBS の動作確認           |
+| `tests/can_cpp_test.cpp`        | C/C++ CAN インターフェースの接続確認 |
+| `tests/coordinate_cpp_test.cpp` | C++ 座標ラッパの演算・変換           |
+| `tests/pid_cpp_test.cpp`        | C++ PID ラッパの制御計算             |
+| `tests/chassis_cpp_test.cpp`    | C++ メカナムラッパの速度計算         |
+| `tests/dji_cpp_test.cpp`        | C++ DJI ラッパの基本挙動             |
+| `tests/servo_cpp_test.cpp`      | C++ サーボラッパの CAN 変換          |
+| `tests/controller_cpp_test.cpp` | C++ コントローラ入力ラッパ           |
 
 ---
 
@@ -356,4 +452,5 @@ ctest --output-on-failure
 [MIT License](LICENSE)
 
 ## 作者
+
 [bit](https://github.com/NekoChan9382)

@@ -44,5 +44,3 @@ Testing/
 # Personal settings
 .vscode/
 .github/
-
-tests/

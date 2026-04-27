@@ -1,5 +1,5 @@
 {
-  "name": "omuraisu-library",
+  "name": "omuraisu-library-c",
   "version": "1.0.0",
   "description": "Robot development C++ library for chassis control, coordinate systems, PID, and DJI motor control",
   "keywords": [
@@ -14,7 +14,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/omuct-robotclub/omuraisu-library.git"
+    "url": "https://github.com/omuct-robotclub/omuraisu-library-c.git"
   },
   "authors": [
     {
@@ -24,28 +24,16 @@
   "license": "MIT",
   "frameworks": ["mbed", "*"],
   "platforms": "*",
-  "dependencies": {
-    "cobs-serial-manager": "https://github.com/NekoChan9382/cobs-serial-manager.git"
-  },
   "build": {
     "srcDir": "src",
-    "includeDir": "src",
-    "srcFilter": [
-      "+<coordinate/*.cpp>"
-    ]
+    "includeDir": "include",
+    "flags": ["-I include/omuraisu/cpp", "-I include/omuraisu/c"]
   },
   "headers": [
-    "src/can/can_interface.hpp",
-    "src/can/can_mbed.hpp",
-    "src/chassis/mecanum.hpp",
-    "src/coordinate/coordinate.hpp",
-    "src/pid/pid.hpp",
-    "src/dji/robomas.hpp",
-    "src/dji/robomas_core.hpp",
-    "src/dji/can_interface.hpp",
-    "src/dji/can_mbed.hpp",
-    "src/controller/controller_core.hpp",
-    "src/controller/controller_can.hpp",
-    "src/controller/controller_serial.hpp"
+    "include/omuraisu/cpp/coordinate/*.hpp",
+    "include/omuraisu/cpp/controller/*.hpp",
+    "include/omuraisu/cpp/dji/*.hpp",
+    "include/omuraisu/cpp/pid/*.hpp",
+    "include/omuraisu/cpp/can/*.hpp"
   ]
 }
